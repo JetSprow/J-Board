@@ -140,9 +140,9 @@ npm run build
 首次启动：
 
 ```bash
-docker compose up -d --build
-docker compose --profile setup run --rm init sh -lc 'npx prisma db push --accept-data-loss'
-docker compose exec app npm run db:seed
+docker compose build init app
+docker compose --profile setup run --rm init
+docker compose up -d app
 ```
 
 更新部署：
@@ -150,7 +150,7 @@ docker compose exec app npm run db:seed
 ```bash
 git pull --ff-only
 docker compose build init app
-docker compose --profile setup run --rm init sh -lc 'npx prisma db push --accept-data-loss'
+docker compose --profile setup run --rm init sh -lc 'npm run db:push'
 docker compose up -d app
 ```
 
@@ -159,7 +159,7 @@ docker compose up -d app
 - 查看状态：`docker compose ps`
 - 查看日志：`docker compose logs -f app`
 - 页面仍是旧版本：确认已执行 `docker compose build init app` 和 `docker compose up -d app`
-- Schema 没有生效：单独运行 `docker compose --profile setup run --rm init sh -lc 'npx prisma db push --accept-data-loss'`
+- Schema 没有生效：单独运行 `docker compose --profile setup run --rm init sh -lc 'npm run db:push'`
 
 ## 节点与探测
 

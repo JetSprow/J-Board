@@ -2,16 +2,20 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PublicNotice } from "../public-notice";
+import { SiteFooter } from "@/components/shared/site-footer";
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <main className="grid min-h-[100dvh] place-items-center px-4 py-10">
-      <div className="w-full">
-        <div className="mx-auto w-full max-w-md">
-          <PublicNotice />
+    <main className="flex min-h-[100dvh] flex-col px-4 py-10">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="w-full">
+          <div className="mx-auto w-full max-w-md">
+            <PublicNotice />
+          </div>
+          {children}
         </div>
-        {children}
       </div>
+      <SiteFooter className="mt-6" />
     </main>
   );
 }

@@ -9,6 +9,7 @@ export function AdminMobileNav() {
       title="J-Board"
       subtitle="管理后台"
       groups={adminNavGroups}
+      collapsibleGroups
     />
   );
 }

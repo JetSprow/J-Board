@@ -11,6 +11,7 @@ export function UserMobileNav({ userName, unreadCount }: { userName: string; unr
       subtitle={userName}
       groups={userNavGroups}
       matchMode="exact"
+      collapsibleGroups
       actions={<NotificationPopover unreadCount={unreadCount} className="size-10" />}
     />
   );

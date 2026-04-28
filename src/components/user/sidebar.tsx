@@ -44,6 +44,7 @@ export function UserSidebar({ userName, unreadCount, onNavigate }: { userName: s
       subtitle={userName}
       groups={userNavGroups}
       matchMode="exact"
+      collapsibleGroups
       headerAction={<NotificationPopover unreadCount={unreadCount} />}
       onNavigate={onNavigate}
     />

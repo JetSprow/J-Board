@@ -23,7 +23,7 @@ echo "[3/7] Building updated images..."
 $COMPOSE build init app
 
 echo "[4/7] Syncing Prisma schema inside Docker network..."
-$COMPOSE --profile setup run --rm init sh -lc 'npx prisma db push --accept-data-loss'
+$COMPOSE --profile setup run --rm init sh -lc 'npm run db:push'
 
 echo "[5/7] Restarting services..."
 $COMPOSE up -d app

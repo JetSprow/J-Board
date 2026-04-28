@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 
 export interface SidebarLink {
@@ -27,6 +27,7 @@ interface SidebarProps {
   groups?: SidebarGroup[];
   matchMode?: "exact" | "prefix";
   collapsibleGroups?: boolean;
+  railCollapsible?: boolean;
   headerAction?: ReactNode;
   onNavigate?: () => void;
 }
@@ -38,6 +39,7 @@ export function Sidebar({
   groups,
   matchMode = "prefix",
   collapsibleGroups = false,
+  railCollapsible = true,
   headerAction,
   onNavigate,
 }: SidebarProps) {
@@ -45,6 +47,8 @@ export function Sidebar({
   const router = useRouter();
   const navGroups = useMemo(() => groups ?? [{ label: "导航", links }], [groups, links]);
   const [signingOut, setSigningOut] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false);
+  const shouldCollapseRail = railCollapsible && railCollapsed;
 
   const isActive = (href: string) =>
     matchMode === "exact" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -71,36 +75,58 @@ export function Sidebar({
     }, {}),
   );
 
+
   return (
-    <aside className="nav-rail flex h-full w-[15rem] flex-col overflow-hidden rounded-xl text-sidebar-foreground">
-      <div className="border-b border-sidebar-border px-4 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
+    <aside
+      className={cn(
+        "nav-rail flex h-full flex-col overflow-hidden rounded-xl text-sidebar-foreground transition-[width] duration-200 ease-out",
+        shouldCollapseRail ? "w-[4.75rem]" : "w-[15rem]",
+      )}
+    >
+      <div className={cn("border-b border-sidebar-border py-4", shouldCollapseRail ? "px-3" : "px-4")}>
+        <div className={cn("flex items-center", shouldCollapseRail ? "flex-col gap-2" : "gap-2.5")}>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
             S
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold tracking-[-0.02em]">{title}</p>
-            {subtitle && (
-              <p className="mt-0.5 truncate text-xs text-sidebar-foreground/55">{subtitle}</p>
-            )}
-          </div>
-          {headerAction}
+          {!shouldCollapseRail && (
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold tracking-[-0.02em]">{title}</p>
+              {subtitle && (
+                <p className="mt-0.5 truncate text-xs text-sidebar-foreground/55">{subtitle}</p>
+              )}
+            </div>
+          )}
+          {!shouldCollapseRail && headerAction}
+          {railCollapsible && (
+            <button
+              type="button"
+              className="btn-base flex size-7 shrink-0 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent/35 text-sidebar-foreground/62 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              aria-label={shouldCollapseRail ? "展开侧边栏" : "收起侧边栏"}
+              title={shouldCollapseRail ? "展开侧边栏" : "收起侧边栏"}
+              onClick={() => setRailCollapsed((value) => !value)}
+            >
+              {shouldCollapseRail ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
+            </button>
+          )}
         </div>
       </div>
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-3" aria-label={`${title} 导航`}>
-        {navGroups.map((group) => (
+      <nav
+        className={cn("flex-1 space-y-4 overflow-y-auto py-3", shouldCollapseRail ? "px-2" : "px-3")}
+        aria-label={`${title} 导航`}
+      >
+        {navGroups.map((group, groupIndex) => (
           <div key={group.label} className="space-y-2">
             {(() => {
               const hasActive = group.links.some((link) => isActive(link.href));
               const isCollapsed =
                 collapsibleGroups &&
-                !hasActive &&
+                !shouldCollapseRail &&
                 (collapsedGroups[group.label] ?? Boolean(group.defaultCollapsed));
-              const isOpen = !isCollapsed;
+              const isOpen = shouldCollapseRail || !isCollapsed;
 
               return (
                 <>
-                  {collapsibleGroups ? (
+                  {collapsibleGroups && !shouldCollapseRail ? (
                     <button
                       type="button"
                       className="flex w-full items-center justify-between rounded-md px-2.5 py-1 text-left text-[0.68rem] font-medium tracking-wide text-sidebar-foreground/45 transition-colors hover:bg-sidebar-accent/40 hover:text-sidebar-foreground/70"
@@ -109,10 +135,7 @@ export function Sidebar({
                       onClick={() =>
                         setCollapsedGroups((prev) => ({
                           ...prev,
-                          [group.label]: !(
-                            !hasActive &&
-                            (prev[group.label] ?? Boolean(group.defaultCollapsed))
-                          ),
+                          [group.label]: !(prev[group.label] ?? (!hasActive && Boolean(group.defaultCollapsed))),
                         }))
                       }
                     >
@@ -124,11 +147,13 @@ export function Sidebar({
                         )}
                       />
                     </button>
-                  ) : (
+                  ) : shouldCollapseRail && groupIndex > 0 ? (
+                    <div className="mx-auto h-px w-6 bg-sidebar-border/70" aria-hidden />
+                  ) : !shouldCollapseRail ? (
                     <p className="px-2.5 text-[0.68rem] font-medium tracking-wide text-sidebar-foreground/38">
                       {group.label}
                     </p>
-                  )}
+                  ) : null}
                   <div
                     id={`sidebar-group-${group.label}`}
                     className={cn("space-y-1", !isOpen && "hidden")}
@@ -143,11 +168,14 @@ export function Sidebar({
                           onClick={onNavigate}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "nav-link-premium group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm",
+                            "nav-link-premium group flex items-center rounded-lg py-2 text-sm",
+                            shouldCollapseRail ? "justify-center px-0" : "gap-2.5 px-2.5",
                             active
                               ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
                               : "text-sidebar-foreground/68 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                           )}
+                          aria-label={shouldCollapseRail ? link.label : undefined}
+                          title={shouldCollapseRail ? link.label : undefined}
                         >
                           <span
                             className={cn(
@@ -157,8 +185,8 @@ export function Sidebar({
                           >
                             {link.icon}
                           </span>
-                          <span className="min-w-0 flex-1 truncate">{link.label}</span>
-                          {active && <span className="size-1.5 rounded-full bg-sidebar-primary-foreground/80" aria-hidden />}
+                          {!shouldCollapseRail && <span className="min-w-0 flex-1 truncate">{link.label}</span>}
+                          {active && !shouldCollapseRail && <span className="size-1.5 rounded-full bg-sidebar-primary-foreground/80" aria-hidden />}
                         </Link>
                       );
                     })}
@@ -169,14 +197,20 @@ export function Sidebar({
           </div>
         ))}
       </nav>
-      <div className="border-t border-sidebar-border px-3 py-3">
+      <div className={cn("border-t border-sidebar-border py-3", shouldCollapseRail ? "px-2" : "px-3")}>
         <button
           type="button"
           onClick={handleSignOut}
           disabled={signingOut}
-          className="btn-base btn-cream w-full rounded-lg px-2.5 py-2 text-left text-sm font-medium text-sidebar-foreground/75 hover:text-sidebar-foreground"
+          className={cn(
+            "btn-base btn-cream flex w-full items-center rounded-lg py-2 text-sm font-medium text-sidebar-foreground/75 hover:text-sidebar-foreground",
+            shouldCollapseRail ? "justify-center px-0" : "gap-2 px-2.5 text-left",
+          )}
+          aria-label={signingOut ? "退出中" : "退出登录"}
+          title={shouldCollapseRail ? (signingOut ? "退出中..." : "退出登录") : undefined}
         >
-          {signingOut ? "退出中..." : "退出登录"}
+          <LogOut className="size-4 shrink-0" />
+          {shouldCollapseRail ? <span className="sr-only">{signingOut ? "退出中..." : "退出登录"}</span> : signingOut ? "退出中..." : "退出登录"}
         </button>
       </div>
     </aside>

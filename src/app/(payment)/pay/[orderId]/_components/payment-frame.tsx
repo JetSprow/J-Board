@@ -3,11 +3,15 @@
 import type { ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { SiteFooter } from "@/components/shared/site-footer";
 
 export function PaymentFrame({ children }: { children: ReactNode }) {
   return (
-    <main className="grid min-h-[100dvh] place-items-center px-4 py-10">
-      <div className="w-full max-w-2xl">{children}</div>
+    <main className="flex min-h-[100dvh] flex-col px-4 py-10">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="w-full max-w-2xl">{children}</div>
+      </div>
+      <SiteFooter className="mt-6 max-w-2xl" />
     </main>
   );
 }

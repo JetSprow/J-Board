@@ -11,10 +11,11 @@ interface MobileHeaderProps {
   links?: SidebarLink[];
   groups?: SidebarGroup[];
   matchMode?: "exact" | "prefix";
+  collapsibleGroups?: boolean;
   actions?: ReactNode;
 }
 
-export function MobileHeader({ title, subtitle, links, groups, matchMode, actions }: MobileHeaderProps) {
+export function MobileHeader({ title, subtitle, links, groups, matchMode, collapsibleGroups, actions }: MobileHeaderProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -42,6 +43,8 @@ export function MobileHeader({ title, subtitle, links, groups, matchMode, action
           links={links}
           groups={groups}
           matchMode={matchMode}
+          collapsibleGroups={collapsibleGroups}
+          railCollapsible={false}
           onNavigate={() => setOpen(false)}
         />
       </MobileDrawer>
