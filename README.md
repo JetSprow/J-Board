@@ -216,7 +216,7 @@ docker compose exec -T db pg_dump -U jboard jboard > backup_$(date +%Y%m%d_%H%M%
 - `agent/jboard-agent/README.md`：探测程序说明
 
 ## 请我喝杯咖啡
-![JsPYre9xe7W1Ad6mwPgrfuXBYJ8iy6oC.webp](https://cdn.nodeimage.com/i/JsPYre9xe7W1Ad6mwPgrfuXBYJ8iy6oC.webp)
+![JsPYre9xe7W1Ad6mwPgrfuXBYJ8iy6oC.webp](https://cdn.nodeimage.com/i/XuxZ7NoLsc51fS99S6AtMB9K9ekTTQcD.webp)
 
 USDT-TRC20: TQfaGEBdnB89V4y6R6bypZXx7Za5QfXBCi
 
