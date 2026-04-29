@@ -24,7 +24,7 @@ trap cleanup EXIT
 if [ -z "${SERVER_URL:-}" ] || [ -z "${AUTH_TOKEN:-}" ]; then
   echo "SERVER_URL and AUTH_TOKEN are required." >&2
   echo "Example:" >&2
-  echo "curl -fsSL https://raw.githubusercontent.com/${GH_REPO}/main/scripts/install-jboard-agent.sh | SERVER_URL=https://example.com AUTH_TOKEN=token bash" >&2
+  echo "curl -fsSL https://raw.githubusercontent.com/${GH_REPO}/lite/scripts/install-jboard-agent.sh | SERVER_URL=https://example.com AUTH_TOKEN=token bash" >&2
   exit 1
 fi
 

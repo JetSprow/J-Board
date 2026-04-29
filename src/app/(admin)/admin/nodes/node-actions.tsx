@@ -27,7 +27,7 @@ interface NodeActionValue {
   agentToken: string | null;
 }
 
-const INSTALL_SCRIPT_URL = "https://raw.githubusercontent.com/JetSprow/J-Board/main/scripts/install-jboard-agent.sh";
+const INSTALL_SCRIPT_URL = "https://raw.githubusercontent.com/JetSprow/J-Board/lite/scripts/install-jboard-agent.sh";
 
 function shellQuote(value: string) {
   return `'${value.replaceAll("'", `'"'"'`)}'`;
