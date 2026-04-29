@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/jboard}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+DEFAULT_APP_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+APP_DIR="${APP_DIR:-$DEFAULT_APP_DIR}"
 COMPOSE="${COMPOSE:-docker compose}"
 BACKUP="${BACKUP:-1}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/public/app-info}"
