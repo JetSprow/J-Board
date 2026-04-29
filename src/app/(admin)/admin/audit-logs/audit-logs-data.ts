@@ -14,11 +14,11 @@ export async function getAuditLogs(
     ...(q
       ? {
           OR: [
-            { action: { contains: q, mode: "insensitive" as const } },
-            { targetType: { contains: q, mode: "insensitive" as const } },
-            { targetLabel: { contains: q, mode: "insensitive" as const } },
-            { actorEmail: { contains: q, mode: "insensitive" as const } },
-            { message: { contains: q, mode: "insensitive" as const } },
+            { action: { contains: q } },
+            { targetType: { contains: q } },
+            { targetLabel: { contains: q } },
+            { actorEmail: { contains: q } },
+            { message: { contains: q } },
           ],
         }
       : {}),

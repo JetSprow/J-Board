@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 enum Role {
@@ -247,28 +247,28 @@ model SubscriptionPlan {
   totalTrafficGb       Int?
   allowRenewal         Boolean          @default(false)
   allowTrafficTopup    Boolean          @default(false)
-  renewalPrice         Decimal?         @db.Decimal(10, 2)
+  renewalPrice         Decimal?
   renewalPricingMode   String           @default("FIXED_DURATION")
   renewalDurationDays  Int?
   renewalMinDays       Int?
   renewalMaxDays       Int?
   renewalTrafficGb     Int?
   topupPricingMode     String           @default("PER_GB")
-  topupPricePerGb      Decimal?         @db.Decimal(10, 2)
-  topupFixedPrice      Decimal?         @db.Decimal(10, 2)
+  topupPricePerGb      Decimal?
+  topupFixedPrice      Decimal?
   minTopupGb           Int?
   maxTopupGb           Int?
   streamingServiceId   String?
   categoryId           String?
   pricingMode          PlanPricingMode  @default(TRAFFIC_SLIDER)
   fixedTrafficGb       Int?
-  fixedPrice           Decimal?         @db.Decimal(10, 2)
+  fixedPrice           Decimal?
   // STREAMING: fixed price per slot
-  price                Decimal?         @db.Decimal(10, 2)
+  price                Decimal?
   // PROXY: linked to a node, price per GB, slider purchase
   nodeId               String?
   inboundId            String?
-  pricePerGb           Decimal?         @db.Decimal(10, 2)
+  pricePerGb           Decimal?
   minTrafficGb         Int?             @default(10)
   maxTrafficGb         Int?             @default(1000)
   createdAt            DateTime         @default(now())
@@ -509,8 +509,8 @@ model OrderItem {
   selectedInboundId String?
   trafficGb         Int?
   quantity          Int      @default(1)
-  unitAmount        Decimal  @db.Decimal(10, 2)
-  amount            Decimal  @db.Decimal(10, 2)
+  unitAmount        Decimal
+  amount            Decimal
   createdAt         DateTime @default(now())
 
   order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -551,9 +551,9 @@ model Order {
   selectedInboundId    String?
   targetSubscriptionId String?
   subscriptionId       String?           @unique
-  amount               Decimal           @db.Decimal(10, 2)
-  subtotalAmount       Decimal           @default(0) @db.Decimal(10, 2)
-  discountAmount       Decimal           @default(0) @db.Decimal(10, 2)
+  amount               Decimal
+  subtotalAmount       Decimal           @default(0)
+  discountAmount       Decimal           @default(0)
   couponId             String?
   couponCode           String?
   promotionName        String?
@@ -621,9 +621,9 @@ model Coupon {
   name              String
   description       String?
   discountType      CouponDiscountType @default(AMOUNT_OFF)
-  discountValue     Decimal            @db.Decimal(10, 2)
-  thresholdAmount   Decimal?           @db.Decimal(10, 2)
-  maxDiscountAmount Decimal?           @db.Decimal(10, 2)
+  discountValue     Decimal
+  thresholdAmount   Decimal?
+  maxDiscountAmount Decimal?
   totalLimit        Int?
   perUserLimit      Int?
   isPublic          Boolean            @default(true)
@@ -660,8 +660,8 @@ model CouponGrant {
 model PromotionRule {
   id              String    @id @default(cuid())
   name            String
-  thresholdAmount Decimal   @db.Decimal(10, 2)
-  discountAmount  Decimal   @db.Decimal(10, 2)
+  thresholdAmount Decimal
+  discountAmount  Decimal
   isActive        Boolean   @default(true)
   startsAt        DateTime?
   endsAt          DateTime?
@@ -677,7 +677,7 @@ model InviteRewardLedger {
   inviterId    String
   inviteeId    String
   orderId      String
-  rewardAmount Decimal            @default(0) @db.Decimal(10, 2)
+  rewardAmount Decimal            @default(0)
   couponCode   String?
   status       InviteRewardStatus @default(ISSUED)
   createdAt    DateTime           @default(now())
@@ -785,7 +785,7 @@ model AppConfig {
   nodeAccessUniqueTargetWarning      Int      @default(80)
   nodeAccessUniqueTargetSuspend      Int      @default(160)
   inviteRewardCouponId              String?
-  inviteRewardRate                  Decimal  @default(0) @db.Decimal(5, 2)
+  inviteRewardRate                  Decimal  @default(0)
   inviteRewardEnabled               Boolean  @default(false)
   turnstileSiteKey                  String?
   turnstileSecretKey                String?

@@ -30,10 +30,10 @@ export async function getAdminOrders(
     ...(q
       ? {
           OR: [
-            { user: { email: { contains: q, mode: "insensitive" as const } } },
-            { user: { name: { contains: q, mode: "insensitive" as const } } },
-            { plan: { name: { contains: q, mode: "insensitive" as const } } },
-            { tradeNo: { contains: q, mode: "insensitive" as const } },
+            { user: { email: { contains: q } } },
+            { user: { name: { contains: q } } },
+            { plan: { name: { contains: q } } },
+            { tradeNo: { contains: q } },
           ],
         }
       : {}),

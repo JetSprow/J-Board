@@ -35,10 +35,10 @@ export async function getAdminUsers(
     ...(q
       ? {
           OR: [
-            { email: { contains: q, mode: "insensitive" as const } },
-            { name: { contains: q, mode: "insensitive" as const } },
-            { inviteCode: { contains: q, mode: "insensitive" as const } },
-            { invitedBy: { email: { contains: q, mode: "insensitive" as const } } },
+            { email: { contains: q } },
+            { name: { contains: q } },
+            { inviteCode: { contains: q } },
+            { invitedBy: { email: { contains: q } } },
           ],
         }
       : {}),

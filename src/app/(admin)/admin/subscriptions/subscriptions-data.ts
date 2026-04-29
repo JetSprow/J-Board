@@ -40,9 +40,9 @@ export async function getAdminSubscriptions(
     ...(q
       ? {
           OR: [
-            { user: { email: { contains: q, mode: "insensitive" as const } } },
-            { user: { name: { contains: q, mode: "insensitive" as const } } },
-            { plan: { name: { contains: q, mode: "insensitive" as const } } },
+            { user: { email: { contains: q } } },
+            { user: { name: { contains: q } } },
+            { plan: { name: { contains: q } } },
           ],
         }
       : {}),

@@ -14,11 +14,11 @@ export async function GET(req: Request) {
     where: q
       ? {
           OR: [
-            { action: { contains: q, mode: "insensitive" } },
-            { targetType: { contains: q, mode: "insensitive" } },
-            { targetLabel: { contains: q, mode: "insensitive" } },
-            { actorEmail: { contains: q, mode: "insensitive" } },
-            { message: { contains: q, mode: "insensitive" } },
+            { action: { contains: q } },
+            { targetType: { contains: q } },
+            { targetLabel: { contains: q } },
+            { actorEmail: { contains: q } },
+            { message: { contains: q } },
           ],
         }
       : undefined,

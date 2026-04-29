@@ -1,9 +1,9 @@
 FROM node:20-alpine AS base
-RUN apk add --no-cache postgresql-client
 
 # --- deps: install production + dev dependencies ---
 FROM base AS deps
 WORKDIR /app
+RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -32,6 +32,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+RUN mkdir -p /app/storage && chown -R nextjs:nodejs /app/storage
 
 # Next.js standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -43,7 +44,11 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
-COPY --from=builder /app/node_modules/@prisma/adapter-pg ./node_modules/@prisma/adapter-pg
+COPY --from=builder /app/node_modules/@prisma/adapter-better-sqlite3 ./node_modules/@prisma/adapter-better-sqlite3
+COPY --from=builder /app/node_modules/@prisma/driver-adapter-utils ./node_modules/@prisma/driver-adapter-utils
+COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+COPY --from=builder /app/node_modules/bindings ./node_modules/bindings
+COPY --from=builder /app/node_modules/file-uri-to-path ./node_modules/file-uri-to-path
 
 USER nextjs
 EXPOSE 3000

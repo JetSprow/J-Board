@@ -40,8 +40,8 @@ async function searchRelatedIds(q: string) {
     prisma.user.findMany({
       where: {
         OR: [
-          { email: { contains: q, mode: "insensitive" } },
-          { name: { contains: q, mode: "insensitive" } },
+          { email: { contains: q } },
+          { name: { contains: q } },
         ],
       },
       select: { id: true },
@@ -51,9 +51,9 @@ async function searchRelatedIds(q: string) {
       where: {
         OR: [
           { id: q },
-          { user: { email: { contains: q, mode: "insensitive" } } },
-          { user: { name: { contains: q, mode: "insensitive" } } },
-          { plan: { name: { contains: q, mode: "insensitive" } } },
+          { user: { email: { contains: q } } },
+          { user: { name: { contains: q } } },
+          { plan: { name: { contains: q } } },
         ],
       },
       select: { id: true },
@@ -87,8 +87,8 @@ export async function getSubscriptionRiskEvents(
             { id: q },
             { userId: q },
             { subscriptionId: q },
-            { ip: { contains: q, mode: "insensitive" as const } },
-            { message: { contains: q, mode: "insensitive" as const } },
+            { ip: { contains: q } },
+            { message: { contains: q } },
             ...(userIds.length > 0 ? [{ userId: { in: userIds } }] : []),
             ...(subscriptionIds.length > 0 ? [{ subscriptionId: { in: subscriptionIds } }] : []),
           ],

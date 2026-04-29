@@ -41,8 +41,8 @@ export async function getNodeServers(
     ...(q
       ? {
           OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
-            { panelUrl: { contains: q, mode: "insensitive" as const } },
+            { name: { contains: q } },
+            { panelUrl: { contains: q } },
           ],
         }
       : {}),

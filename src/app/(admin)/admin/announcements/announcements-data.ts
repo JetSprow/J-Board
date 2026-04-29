@@ -36,8 +36,8 @@ export async function getAnnouncements(
     ...(q
       ? {
           OR: [
-            { title: { contains: q, mode: "insensitive" as const } },
-            { body: { contains: q, mode: "insensitive" as const } },
+            { title: { contains: q } },
+            { body: { contains: q } },
           ],
         }
       : {}),

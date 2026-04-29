@@ -7,13 +7,13 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - sqlite_data:/app/storage
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://jboard:${POSTGRES_PASSWORD:-jboard123}@db:5432/jboard
+      - DATABASE_URL=file:/app/storage/jboard.db
       - REDIS_URL=redis://redis:6379
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/public/app-info || exit 1"]
@@ -28,32 +28,13 @@ services:
     build:
       context: .
       target: init
-    depends_on:
-      db:
-        condition: service_healthy
+    volumes:
+      - sqlite_data:/app/storage
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://jboard:${POSTGRES_PASSWORD:-jboard123}@db:5432/jboard
+      - DATABASE_URL=file:/app/storage/jboard.db
     profiles:
       - setup
-
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: jboard
-      POSTGRES_USER: jboard
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jboard123}
-    # 仅暴露给内部网络，生产环境不要对外开放
-    # ports:
-    #   - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jboard"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -70,5 +51,5 @@ services:
       retries: 5
 
 volumes:
-  postgres_data:
+  sqlite_data:
   redis_data:

@@ -1,9 +1,11 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL || "file:./storage/jboard.db",
+});
 const prisma = new PrismaClient({ adapter });
 
 function envValue(key: string, fallback: string) {

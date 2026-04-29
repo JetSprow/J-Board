@@ -44,9 +44,9 @@ export async function getTrafficClients(
     ...(q
       ? {
           OR: [
-            { user: { email: { contains: q, mode: "insensitive" as const } } },
-            { inbound: { server: { name: { contains: q, mode: "insensitive" as const } } } },
-            { email: { contains: q, mode: "insensitive" as const } },
+            { user: { email: { contains: q } } },
+            { inbound: { server: { name: { contains: q } } } },
+            { email: { contains: q } },
           ],
         }
       : {}),

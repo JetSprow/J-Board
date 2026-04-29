@@ -36,8 +36,8 @@ export async function getAdminPlans(
     ...(q
       ? {
           OR: [
-            { name: { contains: q, mode: "insensitive" as const } },
-            { description: { contains: q, mode: "insensitive" as const } },
+            { name: { contains: q } },
+            { description: { contains: q } },
           ],
         }
       : {}),

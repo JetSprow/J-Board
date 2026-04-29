@@ -49,9 +49,9 @@ export async function getAdminSupportTickets(
     ...(q
       ? {
           OR: [
-            { subject: { contains: q, mode: "insensitive" as const } },
-            { category: { contains: q, mode: "insensitive" as const } },
-            { user: { email: { contains: q, mode: "insensitive" as const } } },
+            { subject: { contains: q } },
+            { category: { contains: q } },
+            { user: { email: { contains: q } } },
           ],
         }
       : {}),

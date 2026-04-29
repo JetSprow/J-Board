@@ -32,9 +32,9 @@ export async function getAdminTaskRuns(
     ...(q
       ? {
           OR: [
-            { title: { contains: q, mode: "insensitive" as const } },
-            { errorMessage: { contains: q, mode: "insensitive" as const } },
-            { targetType: { contains: q, mode: "insensitive" as const } },
+            { title: { contains: q } },
+            { errorMessage: { contains: q } },
+            { targetType: { contains: q } },
           ],
         }
       : {}),
