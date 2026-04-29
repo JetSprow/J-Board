@@ -18,7 +18,7 @@ import { getAggregateSubscriptionToken } from "@/services/subscription";
 
 export const metadata: Metadata = {
   title: "我的订阅",
-  description: "管理活跃订阅，并按 Clash、通用订阅等格式导入客户端。",
+  description: "管理活跃订阅，并复制适配 Clash 与通用客户端的订阅 URL。",
 };
 
 export default async function SubscriptionsPage() {
@@ -39,7 +39,7 @@ export default async function SubscriptionsPage() {
       <PageHeader
         eyebrow="订阅管理"
         title="我的订阅"
-        description="总订阅链接负责导入全部代理节点；Clash 可一键导入 YAML，其他客户端继续使用通用订阅。"
+        description="总订阅链接负责导入全部代理节点；复制 Clash 或通用订阅 URL 后粘贴到客户端。"
       />
 
       <SubscriptionMetrics
