@@ -6,21 +6,48 @@ import bcrypt from "bcryptjs";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-async function main() {
-  const hashedPassword = await bcrypt.hash("admin123", 12);
+function envValue(key: string, fallback: string) {
+  const value = process.env[key]?.trim();
+  return value || fallback;
+}
 
-  await prisma.user.upsert({
-    where: { email: "admin@jboard.local" },
-    update: {},
+async function main() {
+  const adminEmail = envValue("ADMIN_EMAIL", "admin@jboard.local").toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminName = envValue("ADMIN_NAME", "Admin");
+  const siteName = envValue("SITE_NAME", "J-Board");
+  const siteUrl = process.env.NEXTAUTH_URL?.trim() || null;
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+  await prisma.appConfig.upsert({
+    where: { id: "default" },
+    update: {
+      siteName,
+      siteUrl,
+    },
     create: {
-      email: "admin@jboard.local",
-      password: hashedPassword,
-      name: "Admin",
-      role: "ADMIN",
+      id: "default",
+      siteName,
+      siteUrl,
     },
   });
 
-  console.log("Seed completed: admin@jboard.local / admin123");
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      name: adminName,
+      role: "ADMIN",
+    },
+    create: {
+      email: adminEmail,
+      password: hashedPassword,
+      name: adminName,
+      role: "ADMIN",
+      emailVerifiedAt: new Date(),
+    },
+  });
+
+  console.log(`Seed completed: admin ${adminEmail}`);
 }
 
 main()
