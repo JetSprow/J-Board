@@ -197,55 +197,71 @@ export function SubscriptionRiskReviewActions({
 
   return (
     <>
-      <div className="flex max-w-72 flex-wrap justify-end gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={pending}
-          onClick={() => handleGenerateReport(true)}
-        >
-          <FileText className="size-4" />
-          {reportPreview ? "重生成报告" : "生成报告"}
-        </Button>
-        {reportPreview && (
-          <Button size="sm" variant="ghost" disabled={pending} onClick={() => setDialog({ type: "report" })}>
-            查看报告
-          </Button>
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">风险报告</p>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <Button size="sm" variant="outline" disabled={pending} onClick={() => handleGenerateReport(true)}>
+              <FileText className="size-4" />
+              {reportPreview ? "重生成" : "生成报告"}
+            </Button>
+            {reportPreview && (
+              <Button size="sm" variant="ghost" disabled={pending} onClick={() => setDialog({ type: "report" })}>
+                查看报告
+              </Button>
+            )}
+            <Button size="sm" variant="outline" disabled={pending} onClick={handleSendReport} className={reportPreview ? "sm:col-span-2 xl:col-span-1 2xl:col-span-2" : ""}>
+              <Send className="size-4" />
+              {reportSentAt ? "重新发送用户" : "发送用户"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2 border-t border-border/60 pt-3">
+          <p className="text-xs font-medium text-muted-foreground">最终处置</p>
+          <div className="grid gap-2">
+            <Button
+              size="sm"
+              variant={canRestoreSubscription || userRestrictionActive ? "default" : "outline"}
+              disabled={pending || (!canRestoreSubscription && !userRestrictionActive && reviewStatus === "RESOLVED")}
+              onClick={() => openFinalDialog("RESTORE_ACCESS")}
+              className="justify-start"
+            >
+              <UnlockKeyhole className="size-4" />
+              解除限制
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={pending || finalAction === "KEEP_RESTRICTED"}
+              onClick={() => openFinalDialog("KEEP_RESTRICTED")}
+              className="justify-start"
+            >
+              <LockKeyhole className="size-4" />
+              保持封禁/暂停
+            </Button>
+          </div>
+        </div>
+
+        {availableModes.length > 0 && (
+          <div className="space-y-2 border-t border-border/60 pt-3">
+            <p className="text-xs font-medium text-muted-foreground">队列状态</p>
+            <div className="flex flex-wrap gap-2">
+              {availableModes.map((item) => (
+                <Button
+                  key={item.status}
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={() => openReviewDialog(item)}
+                >
+                  <ModeIcon icon={item.icon} />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         )}
-        <Button size="sm" variant="outline" disabled={pending} onClick={handleSendReport}>
-          <Send className="size-4" />
-          {reportSentAt ? "重新发送" : "发送用户"}
-        </Button>
-        <Button
-          size="sm"
-          variant={canRestoreSubscription || userRestrictionActive ? "default" : "outline"}
-          disabled={pending || (!canRestoreSubscription && !userRestrictionActive && reviewStatus === "RESOLVED")}
-          onClick={() => openFinalDialog("RESTORE_ACCESS")}
-        >
-          <UnlockKeyhole className="size-4" />
-          解除限制
-        </Button>
-        <Button
-          size="sm"
-          variant="destructive"
-          disabled={pending || finalAction === "KEEP_RESTRICTED"}
-          onClick={() => openFinalDialog("KEEP_RESTRICTED")}
-        >
-          <LockKeyhole className="size-4" />
-          保持封禁
-        </Button>
-        {availableModes.map((item) => (
-          <Button
-            key={item.status}
-            size="sm"
-            variant="ghost"
-            disabled={pending}
-            onClick={() => openReviewDialog(item)}
-          >
-            <ModeIcon icon={item.icon} />
-            {item.label}
-          </Button>
-        ))}
       </div>
 
       <Dialog open={dialog != null} onOpenChange={(open) => !pending && !open && setDialog(null)}>

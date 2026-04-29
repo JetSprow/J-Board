@@ -1,5 +1,6 @@
 import { ChevronDown, Globe2, MapPin } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { WORLD_COUNTRY_PATHS } from "@/components/shared/world-map-paths";
 import { formatDate } from "@/lib/utils";
 import type { SubscriptionRiskGeoSummary } from "@/services/subscription-risk-review";
 
@@ -11,122 +12,137 @@ function projectPoint(latitude: number, longitude: number) {
 }
 
 function radiusForAccess(count: number) {
-  return Math.min(7, Math.max(3, 2 + Math.sqrt(count)));
+  return Math.min(7.5, Math.max(3.2, 2.4 + Math.sqrt(count)));
+}
+
+function normalizeCountryName(value: string) {
+  const normalized = value.trim().toLowerCase();
+  const aliases: Record<string, string> = {
+    "united states": "united states of america",
+    usa: "united states of america",
+    "u.s.": "united states of america",
+    "u.s.a.": "united states of america",
+    russia: "russia",
+    "russian federation": "russia",
+    vietnam: "vietnam",
+    "viet nam": "vietnam",
+    "south korea": "south korea",
+    korea: "south korea",
+    czechia: "czechia",
+    "czech republic": "czechia",
+  };
+  return aliases[normalized] ?? normalized;
 }
 
 function WorldRiskMap({ summary }: { summary: SubscriptionRiskGeoSummary }) {
-  const points = summary.points.slice(0, 60);
+  const points = summary.points.slice(0, 80);
+  const activeCountries = new Set(summary.countries.map((country) => normalizeCountryName(country.country)));
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border/70 bg-muted/20">
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-card">
       <svg
         viewBox="0 0 360 180"
-        className="h-48 w-full"
+        className="h-[15rem] w-full bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklch,var(--primary)_10%,transparent),transparent_30%),linear-gradient(135deg,var(--muted),var(--card))]"
         role="img"
         aria-label="订阅访问 IP 世界地图分布"
       >
-        <defs>
-          <linearGradient id="risk-map-water" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--muted)" stopOpacity="0.68" />
-            <stop offset="100%" stopColor="var(--card)" stopOpacity="0.94" />
-          </linearGradient>
-        </defs>
-        <rect width="360" height="180" rx="12" fill="url(#risk-map-water)" />
+        <rect width="360" height="180" rx="12" fill="transparent" />
         {[-120, -60, 0, 60, 120].map((longitude) => {
           const x = ((longitude + 180) / 360) * 360;
-          return <line key={longitude} x1={x} x2={x} y1="12" y2="168" stroke="var(--border)" strokeDasharray="2 5" strokeOpacity="0.7" />;
+          return <line key={longitude} x1={x} x2={x} y1="10" y2="170" stroke="var(--border)" strokeDasharray="1 7" strokeOpacity="0.72" />;
         })}
         {[-45, 0, 45].map((latitude) => {
           const y = ((90 - latitude) / 180) * 180;
-          return <line key={latitude} x1="12" x2="348" y1={y} y2={y} stroke="var(--border)" strokeDasharray="2 5" strokeOpacity="0.7" />;
+          return <line key={latitude} x1="10" x2="350" y1={y} y2={y} stroke="var(--border)" strokeDasharray="1 7" strokeOpacity="0.72" />;
         })}
-        <g fill="var(--card)" stroke="var(--border)" strokeWidth="1" opacity="0.92">
-          <path d="M39 50 61 35 91 39 116 57 106 78 82 80 72 106 54 97 36 69Z" />
-          <path d="M86 93 105 103 113 129 100 158 82 144 75 118Z" />
-          <path d="M132 47 160 36 191 41 215 35 251 48 286 58 303 79 276 95 246 89 220 102 190 91 169 98 144 82Z" />
-          <path d="M174 89 198 98 208 126 195 158 172 139 158 107Z" />
-          <path d="M281 116 306 110 326 126 316 147 289 145 270 130Z" />
-          <path d="M295 72 330 69 342 83 325 94 300 89Z" />
-          <path d="M126 33 146 26 168 32 151 42Z" />
+        <g>
+          {WORLD_COUNTRY_PATHS.map((country) => {
+            const active = activeCountries.has(normalizeCountryName(country.name));
+            return (
+              <path
+                key={country.isoA2 + country.name}
+                d={country.path}
+                fill={active ? "color-mix(in oklch, var(--primary) 24%, var(--card))" : "color-mix(in oklch, var(--foreground) 7%, var(--card))"}
+                stroke="var(--border)"
+                strokeWidth={active ? 0.45 : 0.35}
+                opacity={active ? 0.96 : 0.72}
+              />
+            );
+          })}
         </g>
         <g>
           {points.map((point) => {
             const { x, y } = projectPoint(point.latitude, point.longitude);
+            const color = point.allowed ? "var(--primary)" : "var(--destructive)";
             return (
               <g key={point.key}>
                 <title>{point.ip + " / " + point.country + " / " + point.region + " / " + point.city}</title>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={radiusForAccess(point.accessCount) + 2}
-                  fill={point.allowed ? "var(--primary)" : "var(--destructive)"}
-                  opacity="0.16"
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={radiusForAccess(point.accessCount)}
-                  fill={point.allowed ? "var(--primary)" : "var(--destructive)"}
-                  stroke="var(--card)"
-                  strokeWidth="1.5"
-                />
+                <circle cx={x} cy={y} r={radiusForAccess(point.accessCount) + 4} fill={color} opacity="0.13" />
+                <circle cx={x} cy={y} r={radiusForAccess(point.accessCount)} fill={color} stroke="var(--card)" strokeWidth="1.6" />
+                <circle cx={x} cy={y} r="1.3" fill="var(--card)" opacity="0.9" />
               </g>
             );
           })}
         </g>
       </svg>
-      <div className="flex items-center justify-between border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
-        <span>{points.length > 0 ? "已标注 " + points.length + " 个坐标点" : "没有可用经纬度坐标"}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
+        <span>{points.length > 0 ? "真实边界地图 · 已标注 " + points.length + " 个坐标点" : "真实边界地图 · 没有可用经纬度坐标"}</span>
         <span>圆点越大表示访问越集中</span>
       </div>
     </div>
   );
 }
 
+function RiskMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="min-w-0 border-t border-border/60 pt-3 first:border-t-0 first:pt-0 sm:border-l sm:border-t-0 sm:pl-3 sm:pt-0 sm:first:border-l-0 sm:first:pl-0">
+      <p className="text-[0.7rem] text-muted-foreground">{label}</p>
+      <p className="mt-1 font-mono text-lg font-semibold leading-none">{value}</p>
+    </div>
+  );
+}
+
 export function SubscriptionRiskGeoDetails({ summary }: { summary: SubscriptionRiskGeoSummary }) {
   return (
-    <details className="group min-w-[24rem] rounded-lg border border-border/70 bg-muted/20 text-sm">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden">
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-background text-primary">
+    <section className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
             <Globe2 className="size-4" />
           </span>
-          <span className="min-w-0">
-            <span className="block font-medium">地区与 IP 证据</span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {summary.uniqueCountryCount} 国 / {summary.uniqueRegionCount} 省区 / {summary.uniqueCityCount} 城市 / {summary.uniqueIpCount} IP
-            </span>
-          </span>
-        </span>
-        <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-      </summary>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold">地理证据</h3>
+            <p className="truncate text-xs text-muted-foreground">国家、省区、城市与 IP 的窗口内变化</p>
+          </div>
+        </div>
+        <StatusBadge tone={summary.uniqueCountryCount > 1 ? "danger" : summary.uniqueRegionCount > 1 ? "warning" : "info"}>
+          {summary.uniqueCountryCount} 国
+        </StatusBadge>
+      </div>
 
-      <div className="border-t border-border/60 p-3">
-        <div className="grid gap-3 xl:grid-cols-[minmax(20rem,1.1fr)_minmax(16rem,0.9fr)]">
-          <WorldRiskMap summary={summary} />
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.25fr)_minmax(15rem,0.75fr)]">
+        <WorldRiskMap summary={summary} />
+
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-4 2xl:grid-cols-2">
+            <RiskMetric label="访问" value={summary.totalLogs} />
+            <RiskMetric label="IP" value={summary.uniqueIpCount} />
+            <RiskMetric label="省区" value={summary.uniqueRegionCount} />
+            <RiskMetric label="城市" value={summary.uniqueCityCount} />
+          </div>
 
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-md border border-border/60 bg-background/70 p-2">
-                <p className="text-xs text-muted-foreground">访问记录</p>
-                <p className="mt-1 font-mono text-base font-semibold">{summary.totalLogs}</p>
-              </div>
-              <div className="rounded-md border border-border/60 bg-background/70 p-2">
-                <p className="text-xs text-muted-foreground">不同 IP</p>
-                <p className="mt-1 font-mono text-base font-semibold">{summary.uniqueIpCount}</p>
-              </div>
-            </div>
-
-            <div className="max-h-44 space-y-2 overflow-auto pr-1">
+            <p className="text-xs font-medium text-muted-foreground">国家分布</p>
+            <div className="max-h-40 space-y-2 overflow-auto pr-1">
               {summary.countries.length === 0 ? (
-                <p className="rounded-md border border-dashed border-border/70 p-3 text-xs text-muted-foreground">
-                  暂无可识别地区数据，可能是 GeoIP 未命中或访问来源未携带有效 IP。
+                <p className="rounded-lg border border-dashed border-border/70 p-3 text-xs leading-5 text-muted-foreground">
+                  GeoIP 未识别出国家、省区或城市。
                 </p>
               ) : (
                 summary.countries.map((country) => (
-                  <div key={country.country} className="rounded-md border border-border/60 bg-background/70 p-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="break-words font-medium">{country.country}</p>
+                  <div key={country.country} className="border-t border-border/60 pt-2 first:border-t-0 first:pt-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="break-words text-sm font-medium">{country.country}</p>
                       <span className="shrink-0 font-mono text-xs text-muted-foreground">{country.accessCount} 次</span>
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -134,7 +150,7 @@ export function SubscriptionRiskGeoDetails({ summary }: { summary: SubscriptionR
                     </p>
                     {(country.topRegions.length > 0 || country.topCities.length > 0) && (
                       <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                        省区：{country.topRegions.join("、") || "未识别"}；城市：{country.topCities.join("、") || "未识别"}
+                        {country.topRegions.join("、") || "未识别省区"} / {country.topCities.join("、") || "未识别城市"}
                       </p>
                     )}
                   </div>
@@ -143,32 +159,35 @@ export function SubscriptionRiskGeoDetails({ summary }: { summary: SubscriptionR
             </div>
           </div>
         </div>
-
-        <div className="mt-3 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <MapPin className="size-3.5" /> 最近访问明细
-          </div>
-          <div className="grid gap-2 lg:grid-cols-2">
-            {summary.recentAccesses.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border/70 p-3 text-xs text-muted-foreground">暂无访问明细。</p>
-            ) : (
-              summary.recentAccesses.slice(0, 6).map((access) => (
-                <div key={access.id} className="min-w-0 rounded-md border border-border/60 bg-background/70 p-2 text-xs leading-5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate font-mono">{access.ip}</span>
-                    <StatusBadge tone={access.allowed ? "success" : "warning"}>
-                      {access.allowed ? "放行" : access.reason || "拦截"}
-                    </StatusBadge>
-                  </div>
-                  <p className="mt-1 break-words text-muted-foreground">{access.location}</p>
-                  <p className="text-muted-foreground">{formatDate(access.createdAt)}</p>
-                  {access.userAgent && <p className="mt-1 truncate text-muted-foreground">{access.userAgent}</p>}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
       </div>
-    </details>
+
+      <details className="group rounded-xl border border-border/70 bg-muted/20">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          <span className="flex items-center gap-2">
+            <MapPin className="size-4 text-primary" /> IP 访问明细
+          </span>
+          <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid gap-2 border-t border-border/60 p-3 lg:grid-cols-2">
+          {summary.recentAccesses.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border/70 p-3 text-xs text-muted-foreground">暂无访问明细。</p>
+          ) : (
+            summary.recentAccesses.slice(0, 8).map((access) => (
+              <div key={access.id} className="min-w-0 border-t border-border/60 pt-2 text-xs leading-5 first:border-t-0 first:pt-0 lg:odd:border-t-0 lg:odd:pt-0 lg:even:border-t-0 lg:even:pt-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate font-mono text-foreground">{access.ip}</span>
+                  <StatusBadge tone={access.allowed ? "success" : "warning"}>
+                    {access.allowed ? "放行" : access.reason || "拦截"}
+                  </StatusBadge>
+                </div>
+                <p className="mt-1 break-words text-muted-foreground">{access.location}</p>
+                <p className="text-muted-foreground">{formatDate(access.createdAt)}</p>
+                {access.userAgent && <p className="mt-1 truncate text-muted-foreground">{access.userAgent}</p>}
+              </div>
+            ))
+          )}
+        </div>
+      </details>
+    </section>
   );
 }
