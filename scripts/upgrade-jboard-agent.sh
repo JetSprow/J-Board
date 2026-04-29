@@ -178,6 +178,68 @@ Then restart x-ui and rerun this upgrade script, or add XRAY_ACCESS_LOG_PATH=/us
 HINT
 }
 
+service_candidates() {
+  printf '%s\n' "$SERVICE_NAME" jboard-agent jboard-probe-agent j-board-agent jboard-probe \
+    | awk 'NF && !seen[$0]++'
+}
+
+agent_service_exists() {
+  local candidate="$1"
+  run_as_root_output test -f "/etc/systemd/system/${candidate}.service" 2>/dev/null \
+    || run_as_root_output test -f "/lib/systemd/system/${candidate}.service" 2>/dev/null \
+    || run_as_root_output test -f "/usr/lib/systemd/system/${candidate}.service" 2>/dev/null \
+    || run_as_root_output systemctl is-active --quiet "${candidate}.service" 2>/dev/null \
+    || run_as_root_output systemctl is-enabled --quiet "${candidate}.service" 2>/dev/null
+}
+
+remove_old_agent_services() {
+  local removed=0
+  local candidate=""
+
+  while IFS= read -r candidate; do
+    [ -n "$candidate" ] || continue
+    if agent_service_exists "$candidate"; then
+      echo "Removing old agent service: ${candidate}.service"
+      run_as_root systemctl stop "${candidate}.service" >/dev/null 2>&1 || true
+      run_as_root systemctl disable "${candidate}.service" >/dev/null 2>&1 || true
+      run_as_root systemctl reset-failed "${candidate}.service" >/dev/null 2>&1 || true
+      run_as_root rm -f \
+        "/etc/systemd/system/${candidate}.service" \
+        "/lib/systemd/system/${candidate}.service" \
+        "/usr/lib/systemd/system/${candidate}.service"
+      removed=1
+    fi
+  done < <(service_candidates)
+
+  if [ "$removed" = "1" ]; then
+    run_as_root systemctl daemon-reload
+  else
+    echo "No old agent service found."
+  fi
+}
+
+write_systemd_service() {
+  local service_tmp="$TMP_DIR/${SERVICE_NAME}.service"
+  cat > "$service_tmp" <<SERVICE
+[Unit]
+Description=J-Board Probe Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=${ENV_FILE}
+ExecStart=${INSTALL_DIR}/jboard-agent
+Restart=always
+RestartSec=10
+MemoryMax=64M
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+  run_as_root install -m 0644 "$service_tmp" "/etc/systemd/system/${SERVICE_NAME}.service"
+}
+
 ASSET="$(detect_asset)"
 RESOLVED_TAG="$(resolve_release_tag)"
 
@@ -190,12 +252,12 @@ DOWNLOAD_BASE="https://github.com/${GH_REPO}/releases/download/${RESOLVED_TAG}"
 DOWNLOAD_URL="${DOWNLOAD_BASE}/${ASSET}"
 CHECKSUM_URL="${DOWNLOAD_BASE}/SHA256SUMS"
 
-echo "[1/6] Release tag: ${RESOLVED_TAG}"
-echo "[2/6] Downloading probe agent binary: ${ASSET}"
+echo "[1/7] Release tag: ${RESOLVED_TAG}"
+echo "[2/7] Downloading probe agent binary: ${ASSET}"
 curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$ASSET"
 
 if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/SHA256SUMS" 2>/dev/null; then
-  echo "[3/6] Verifying checksum..."
+  echo "[3/7] Verifying checksum..."
   grep "  ${ASSET}$" "$TMP_DIR/SHA256SUMS" > "$TMP_DIR/SHA256SUMS.current"
   (
     cd "$TMP_DIR"
@@ -206,14 +268,17 @@ if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/SHA256SUMS" 2>/dev/null; then
     fi
   )
 else
-  echo "[3/6] Checksum file not found; skipping verification."
+  echo "[3/7] Checksum file not found; skipping verification."
 fi
 
-echo "[4/6] Installing binary..."
+echo "[4/7] Removing old agent service..."
+remove_old_agent_services
+
+echo "[5/7] Installing binary..."
 run_as_root install -m 0755 "$TMP_DIR/$ASSET" "${INSTALL_DIR}/jboard-agent"
 run_as_root mkdir -p /var/log/jboard /var/lib/jboard-agent
 
-echo "[5/6] Detecting Xray access log..."
+echo "[6/7] Detecting Xray access log..."
 if configure_xray_log_env; then
   echo "Node access risk telemetry: enabled (${XRAY_ACCESS_LOG_PATH})"
 else
@@ -221,8 +286,10 @@ else
   print_xray_log_hint
 fi
 
-echo "[6/6] Restarting service..."
+echo "[7/7] Writing service and starting..."
+write_systemd_service
 run_as_root systemctl daemon-reload
+run_as_root systemctl enable "$SERVICE_NAME"
 run_as_root systemctl restart "$SERVICE_NAME"
 
 echo

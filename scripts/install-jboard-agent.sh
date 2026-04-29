@@ -146,73 +146,49 @@ Then restart x-ui and rerun this installer, or add XRAY_ACCESS_LOG_PATH=/usr/loc
 HINT
 }
 
-ASSET="$(detect_asset)"
-RESOLVED_TAG="$(resolve_release_tag)"
+service_candidates() {
+  printf '%s\n' "$SERVICE_NAME" jboard-agent jboard-probe-agent j-board-agent jboard-probe \
+    | awk 'NF && !seen[$0]++'
+}
 
-if [ -z "$RESOLVED_TAG" ]; then
-  echo "Failed to resolve release tag for ${GH_REPO}" >&2
-  exit 1
-fi
+agent_service_exists() {
+  local candidate="$1"
+  run_as_root_output test -f "/etc/systemd/system/${candidate}.service" 2>/dev/null \
+    || run_as_root_output test -f "/lib/systemd/system/${candidate}.service" 2>/dev/null \
+    || run_as_root_output test -f "/usr/lib/systemd/system/${candidate}.service" 2>/dev/null \
+    || run_as_root_output systemctl is-active --quiet "${candidate}.service" 2>/dev/null \
+    || run_as_root_output systemctl is-enabled --quiet "${candidate}.service" 2>/dev/null
+}
 
-DOWNLOAD_BASE="https://github.com/${GH_REPO}/releases/download/${RESOLVED_TAG}"
-DOWNLOAD_URL="${DOWNLOAD_BASE}/${ASSET}"
-CHECKSUM_URL="${DOWNLOAD_BASE}/SHA256SUMS"
+remove_old_agent_services() {
+  local removed=0
+  local candidate=""
 
-echo "[1/9] Release tag: ${RESOLVED_TAG}"
-echo "[2/9] Downloading probe agent binary: ${ASSET}"
-curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$ASSET"
-
-if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/SHA256SUMS" 2>/dev/null; then
-  echo "[3/9] Verifying checksum..."
-  grep "  ${ASSET}$" "$TMP_DIR/SHA256SUMS" > "$TMP_DIR/SHA256SUMS.current"
-  (
-    cd "$TMP_DIR"
-    if command -v sha256sum >/dev/null 2>&1; then
-      sha256sum -c SHA256SUMS.current >/dev/null
-    else
-      shasum -a 256 -c SHA256SUMS.current >/dev/null
+  while IFS= read -r candidate; do
+    [ -n "$candidate" ] || continue
+    if agent_service_exists "$candidate"; then
+      echo "Removing old agent service: ${candidate}.service"
+      run_as_root systemctl stop "${candidate}.service" >/dev/null 2>&1 || true
+      run_as_root systemctl disable "${candidate}.service" >/dev/null 2>&1 || true
+      run_as_root systemctl reset-failed "${candidate}.service" >/dev/null 2>&1 || true
+      run_as_root rm -f \
+        "/etc/systemd/system/${candidate}.service" \
+        "/lib/systemd/system/${candidate}.service" \
+        "/usr/lib/systemd/system/${candidate}.service"
+      removed=1
     fi
-  )
-else
-  echo "[3/9] Checksum file not found; skipping verification."
-fi
+  done < <(service_candidates)
 
-echo "[4/9] Installing binary..."
-run_as_root install -m 0755 "$TMP_DIR/$ASSET" "${INSTALL_DIR}/jboard-agent"
-run_as_root mkdir -p /var/log/jboard /var/lib/jboard-agent
+  if [ "$removed" = "1" ]; then
+    run_as_root systemctl daemon-reload
+  else
+    echo "No old agent service found."
+  fi
+}
 
-if [ "$INSTALL_NEXTTRACE" = "1" ] && ! command -v nexttrace >/dev/null 2>&1; then
-  echo "[5/9] Installing nexttrace for route probing..."
-  curl -fsSL https://raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh -o "$TMP_DIR/nt_install.sh"
-  run_as_root bash "$TMP_DIR/nt_install.sh"
-else
-  echo "[5/9] nexttrace already installed or skipped."
-fi
-
-echo "[6/9] Detecting Xray access log..."
-if prepare_xray_access_log; then
-  echo "Found Xray access log: ${XRAY_ACCESS_LOG_PATH}"
-else
-  echo "Xray access log not found; continuing without node access risk telemetry."
-fi
-
-echo "[7/9] Writing environment file..."
-ENV_TMP="$TMP_DIR/jboard-agent.env"
-{
-  printf 'SERVER_URL=%q\n' "$SERVER_URL"
-  printf 'AUTH_TOKEN=%q\n' "$AUTH_TOKEN"
-  printf 'LATENCY_INTERVAL=%q\n' "$LATENCY_INTERVAL"
-  printf 'TRACE_INTERVAL=%q\n' "$TRACE_INTERVAL"
-  printf 'XRAY_ACCESS_LOG_PATH=%q\n' "$XRAY_ACCESS_LOG_PATH"
-  printf 'XRAY_LOG_INTERVAL=%q\n' "$XRAY_LOG_INTERVAL"
-  printf 'XRAY_LOG_STATE_FILE=%q\n' "$XRAY_LOG_STATE_FILE"
-  printf 'XRAY_LOG_START_AT_END=%q\n' "$XRAY_LOG_START_AT_END"
-} > "$ENV_TMP"
-run_as_root install -m 0600 "$ENV_TMP" "$ENV_FILE"
-
-echo "[8/9] Writing systemd service..."
-SERVICE_TMP="$TMP_DIR/${SERVICE_NAME}.service"
-cat > "$SERVICE_TMP" <<SERVICE
+write_systemd_service() {
+  local service_tmp="$TMP_DIR/${SERVICE_NAME}.service"
+  cat > "$service_tmp" <<SERVICE
 [Unit]
 Description=J-Board Probe Agent
 After=network-online.target
@@ -229,9 +205,80 @@ MemoryMax=64M
 [Install]
 WantedBy=multi-user.target
 SERVICE
-run_as_root install -m 0644 "$SERVICE_TMP" "/etc/systemd/system/${SERVICE_NAME}.service"
+  run_as_root install -m 0644 "$service_tmp" "/etc/systemd/system/${SERVICE_NAME}.service"
+}
 
-echo "[9/9] Enabling and starting service..."
+ASSET="$(detect_asset)"
+RESOLVED_TAG="$(resolve_release_tag)"
+
+if [ -z "$RESOLVED_TAG" ]; then
+  echo "Failed to resolve release tag for ${GH_REPO}" >&2
+  exit 1
+fi
+
+DOWNLOAD_BASE="https://github.com/${GH_REPO}/releases/download/${RESOLVED_TAG}"
+DOWNLOAD_URL="${DOWNLOAD_BASE}/${ASSET}"
+CHECKSUM_URL="${DOWNLOAD_BASE}/SHA256SUMS"
+
+echo "[1/10] Release tag: ${RESOLVED_TAG}"
+echo "[2/10] Downloading probe agent binary: ${ASSET}"
+curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$ASSET"
+
+if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/SHA256SUMS" 2>/dev/null; then
+  echo "[3/10] Verifying checksum..."
+  grep "  ${ASSET}$" "$TMP_DIR/SHA256SUMS" > "$TMP_DIR/SHA256SUMS.current"
+  (
+    cd "$TMP_DIR"
+    if command -v sha256sum >/dev/null 2>&1; then
+      sha256sum -c SHA256SUMS.current >/dev/null
+    else
+      shasum -a 256 -c SHA256SUMS.current >/dev/null
+    fi
+  )
+else
+  echo "[3/10] Checksum file not found; skipping verification."
+fi
+
+echo "[4/10] Removing old agent service..."
+remove_old_agent_services
+
+echo "[5/10] Installing binary..."
+run_as_root install -m 0755 "$TMP_DIR/$ASSET" "${INSTALL_DIR}/jboard-agent"
+run_as_root mkdir -p /var/log/jboard /var/lib/jboard-agent
+
+if [ "$INSTALL_NEXTTRACE" = "1" ] && ! command -v nexttrace >/dev/null 2>&1; then
+  echo "[6/10] Installing nexttrace for route probing..."
+  curl -fsSL https://raw.githubusercontent.com/nxtrace/NTrace-core/main/nt_install.sh -o "$TMP_DIR/nt_install.sh"
+  run_as_root bash "$TMP_DIR/nt_install.sh"
+else
+  echo "[6/10] nexttrace already installed or skipped."
+fi
+
+echo "[7/10] Detecting Xray access log..."
+if prepare_xray_access_log; then
+  echo "Found Xray access log: ${XRAY_ACCESS_LOG_PATH}"
+else
+  echo "Xray access log not found; continuing without node access risk telemetry."
+fi
+
+echo "[8/10] Writing environment file..."
+ENV_TMP="$TMP_DIR/jboard-agent.env"
+{
+  printf 'SERVER_URL=%q\n' "$SERVER_URL"
+  printf 'AUTH_TOKEN=%q\n' "$AUTH_TOKEN"
+  printf 'LATENCY_INTERVAL=%q\n' "$LATENCY_INTERVAL"
+  printf 'TRACE_INTERVAL=%q\n' "$TRACE_INTERVAL"
+  printf 'XRAY_ACCESS_LOG_PATH=%q\n' "$XRAY_ACCESS_LOG_PATH"
+  printf 'XRAY_LOG_INTERVAL=%q\n' "$XRAY_LOG_INTERVAL"
+  printf 'XRAY_LOG_STATE_FILE=%q\n' "$XRAY_LOG_STATE_FILE"
+  printf 'XRAY_LOG_START_AT_END=%q\n' "$XRAY_LOG_START_AT_END"
+} > "$ENV_TMP"
+run_as_root install -m 0600 "$ENV_TMP" "$ENV_FILE"
+
+echo "[9/10] Writing systemd service..."
+write_systemd_service
+
+echo "[10/10] Enabling and starting service..."
 run_as_root systemctl daemon-reload
 run_as_root systemctl enable --now "$SERVICE_NAME"
 
