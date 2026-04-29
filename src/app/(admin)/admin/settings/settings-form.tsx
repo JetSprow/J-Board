@@ -32,6 +32,8 @@ interface AppConfig {
   subscriptionRiskCitySuspend: number;
   subscriptionRiskRegionWarning: number;
   subscriptionRiskRegionSuspend: number;
+  subscriptionRiskCountryWarning: number;
+  subscriptionRiskCountrySuspend: number;
   subscriptionRiskIpLimitPerHour: number;
   subscriptionRiskTokenLimitPerHour: number;
   inviteRewardEnabled: boolean;
@@ -293,6 +295,28 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="subscriptionRiskCountryWarning">国家警告阈值</Label>
+            <Input
+              id="subscriptionRiskCountryWarning"
+              name="subscriptionRiskCountryWarning"
+              type="number"
+              min={2}
+              max={100}
+              defaultValue={config.subscriptionRiskCountryWarning}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="subscriptionRiskCountrySuspend">国家暂停阈值</Label>
+            <Input
+              id="subscriptionRiskCountrySuspend"
+              name="subscriptionRiskCountrySuspend"
+              type="number"
+              min={2}
+              max={100}
+              defaultValue={config.subscriptionRiskCountrySuspend}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="subscriptionRiskIpLimitPerHour">IP 限流（次/小时）</Label>
             <Input
               id="subscriptionRiskIpLimitPerHour"
@@ -316,7 +340,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           </div>
         </div>
         <p className="text-xs leading-5 text-muted-foreground">
-          默认值对应原规则：24 小时内 4 城市警告、5 城市暂停；2 省/地区警告、3 省/地区暂停；IP 180 次/小时，订阅 60 次/小时。
+          默认值对应原规则：24 小时内 4 城市警告、5 城市暂停；2 省/地区警告、3 省/地区暂停；2 国家警告、3 国家暂停；IP 180 次/小时，订阅 60 次/小时。
         </p>
       </section>
 

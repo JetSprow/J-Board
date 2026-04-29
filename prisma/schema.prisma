@@ -50,6 +50,8 @@ enum SubscriptionRiskReason {
   CITY_VARIANCE_SUSPEND
   REGION_VARIANCE_WARNING
   REGION_VARIANCE_SUSPEND
+  COUNTRY_VARIANCE_WARNING
+  COUNTRY_VARIANCE_SUSPEND
 }
 
 enum SubscriptionRiskReviewStatus {
@@ -751,6 +753,8 @@ model AppConfig {
   subscriptionRiskCitySuspend       Int      @default(5)
   subscriptionRiskRegionWarning     Int      @default(2)
   subscriptionRiskRegionSuspend     Int      @default(3)
+  subscriptionRiskCountryWarning    Int      @default(2)
+  subscriptionRiskCountrySuspend    Int      @default(3)
   subscriptionRiskIpLimitPerHour    Int      @default(180)
   subscriptionRiskTokenLimitPerHour Int      @default(60)
   inviteRewardCouponId              String?

@@ -210,7 +210,7 @@ server {
 
 订阅域名套 Cloudflare 时，源站应只允许 Cloudflare 回源或通过 Cloudflare Tunnel 暴露服务，并正确传递 `CF-Connecting-IP` / `X-Forwarded-For`。否则后续订阅访问风控中的真实 IP 可能被直连源站请求伪造。
 
-J-Board 会记录订阅 API 的真实 IP、User-Agent 和可用的地理位置头，并按后台“系统设置 -> 订阅访问风控”配置执行限流、跨城市/省份告警与自动暂停。默认规则保持为：24 小时内 4 个城市警告、5 个城市暂停；2 个省/地区警告、3 个省/地区暂停；IP 180 次/小时、订阅 60 次/小时。管理员可以关闭风控总控，或关闭自动暂停改为只记录警告；也可以在后台“订阅风控”查看关联用户、订阅、IP、地区统计，并将事件标记为待处理、已确认或已解决，必要时可人工恢复被暂停的订阅。项目内置 `data/GeoLite2-City.mmdb` 作为本地 GeoIP 城市库，默认通过 `GEOIP_MMDB_PATH=data/GeoLite2-City.mmdb` 读取；如果反代或 CDN 已传地理位置头，系统优先使用请求头，并用 MMDB 补齐缺失字段。Cloudflare 场景建议在 Rules -> Settings -> Managed Transforms 开启 Add visitor location headers，让回源请求带上 `cf-ipcity`、`cf-region`、`cf-region-code` 等字段；未提供城市/省份字段且 MMDB 不可用时，系统只记录 IP，不会触发地区变化规则。
+J-Board 会记录订阅 API 的真实 IP、User-Agent 和可用的地理位置头，并按后台“系统设置 -> 订阅访问风控”配置执行限流、跨城市/省份告警与自动暂停。默认规则保持为：24 小时内 4 个城市警告、5 个城市暂停；2 个省/地区警告、3 个省/地区暂停；2 个国家/地区警告、3 个国家/地区暂停；IP 180 次/小时、订阅 60 次/小时。管理员可以关闭风控总控，或关闭自动暂停改为只记录警告；也可以在后台“订阅风控”查看关联用户、订阅、IP、地区统计，并将事件标记为待处理、已确认或已解决，必要时可人工恢复被暂停的订阅。项目内置 `data/GeoLite2-City.mmdb` 作为本地 GeoIP 城市库，默认通过 `GEOIP_MMDB_PATH=data/GeoLite2-City.mmdb` 读取；如果反代或 CDN 已传地理位置头，系统优先使用请求头，并用 MMDB 补齐缺失字段。Cloudflare 场景建议在 Rules -> Settings -> Managed Transforms 开启 Add visitor location headers，让回源请求带上 `cf-ipcity`、`cf-region`、`cf-region-code` 等字段；未提供城市/省份字段且 MMDB 不可用时，系统只记录 IP，不会触发地区变化规则。
 
 ### 手动 Docker 部署
 

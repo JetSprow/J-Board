@@ -43,6 +43,8 @@ export default async function AdminSettingsPage() {
           subscriptionRiskCitySuspend: config.subscriptionRiskCitySuspend,
           subscriptionRiskRegionWarning: config.subscriptionRiskRegionWarning,
           subscriptionRiskRegionSuspend: config.subscriptionRiskRegionSuspend,
+          subscriptionRiskCountryWarning: config.subscriptionRiskCountryWarning,
+          subscriptionRiskCountrySuspend: config.subscriptionRiskCountrySuspend,
           subscriptionRiskIpLimitPerHour: config.subscriptionRiskIpLimitPerHour,
           subscriptionRiskTokenLimitPerHour: config.subscriptionRiskTokenLimitPerHour,
           inviteRewardEnabled: config.inviteRewardEnabled,

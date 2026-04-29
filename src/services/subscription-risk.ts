@@ -22,6 +22,8 @@ type SubscriptionRiskConfig = Pick<
   | "subscriptionRiskCitySuspend"
   | "subscriptionRiskRegionWarning"
   | "subscriptionRiskRegionSuspend"
+  | "subscriptionRiskCountryWarning"
+  | "subscriptionRiskCountrySuspend"
 >;
 
 interface RecordSubscriptionAccessInput {
@@ -51,6 +53,8 @@ interface RiskThresholds {
   citySuspend: number;
   regionWarning: number;
   regionSuspend: number;
+  countryWarning: number;
+  countrySuspend: number;
   autoSuspend: boolean;
 }
 
@@ -89,15 +93,19 @@ function riskMessage(options: {
   decision: RiskDecision;
   kind: SubscriptionAccessKind;
   ip: string;
-  cityCount: number;
+  countryCount: number;
   regionCount: number;
-  cityLabels: string[];
+  cityCount: number;
+  countryLabels: string[];
   regionLabels: string[];
+  cityLabels: string[];
 }) {
   const scope = getScopeLabel(options.kind);
-  const locationSummary = options.decision.reason.startsWith("REGION")
-    ? `${options.regionCount} 个省/地区：${formatKeyPreview(options.regionLabels)}`
-    : `${options.cityCount} 个城市：${formatKeyPreview(options.cityLabels)}`;
+  const locationSummary = options.decision.reason.startsWith("COUNTRY")
+    ? `${options.countryCount} 个国家/地区：${formatKeyPreview(options.countryLabels)}`
+    : options.decision.reason.startsWith("REGION")
+      ? `${options.regionCount} 个省/地区：${formatKeyPreview(options.regionLabels)}`
+      : `${options.cityCount} 个城市：${formatKeyPreview(options.cityLabels)}`;
 
   if (options.decision.level === "SUSPENDED") {
     return `${scope}访问地区异常，24 小时内出现 ${locationSummary}，最近 IP ${options.ip}，已自动暂停。`;
@@ -106,12 +114,23 @@ function riskMessage(options: {
   return `${scope}访问地区异常，24 小时内出现 ${locationSummary}，最近 IP ${options.ip}，已记录警告。`;
 }
 
-function decideRisk(cityCount: number, regionCount: number, thresholds: RiskThresholds): RiskDecision | null {
+function decideRisk(
+  countryCount: number,
+  regionCount: number,
+  cityCount: number,
+  thresholds: RiskThresholds,
+): RiskDecision | null {
+  if (thresholds.autoSuspend && countryCount >= thresholds.countrySuspend) {
+    return { level: "SUSPENDED", reason: "COUNTRY_VARIANCE_SUSPEND" };
+  }
   if (thresholds.autoSuspend && regionCount >= thresholds.regionSuspend) {
     return { level: "SUSPENDED", reason: "REGION_VARIANCE_SUSPEND" };
   }
   if (thresholds.autoSuspend && cityCount >= thresholds.citySuspend) {
     return { level: "SUSPENDED", reason: "CITY_VARIANCE_SUSPEND" };
+  }
+  if (countryCount >= thresholds.countryWarning) {
+    return { level: "WARNING", reason: "COUNTRY_VARIANCE_WARNING" };
   }
   if (regionCount >= thresholds.regionWarning) {
     return { level: "WARNING", reason: "REGION_VARIANCE_WARNING" };
@@ -353,6 +372,8 @@ async function evaluateSubscriptionRisk(input: {
     citySuspend: config.subscriptionRiskCitySuspend,
     regionWarning: config.subscriptionRiskRegionWarning,
     regionSuspend: config.subscriptionRiskRegionSuspend,
+    countryWarning: config.subscriptionRiskCountryWarning,
+    countrySuspend: config.subscriptionRiskCountrySuspend,
     autoSuspend: config.subscriptionRiskAutoSuspend,
   };
   const windowStartedAt = new Date(Date.now() - config.subscriptionRiskWindowHours * 60 * 60 * 1000);
@@ -399,17 +420,19 @@ async function evaluateSubscriptionRisk(input: {
   const countryLabels = Array.from(countryMap.values());
   const regionLabels = Array.from(regionMap.values());
   const cityLabels = Array.from(cityMap.values());
-  const decision = decideRisk(cityLabels.length, regionLabels.length, thresholds);
+  const decision = decideRisk(countryLabels.length, regionLabels.length, cityLabels.length, thresholds);
   if (!decision) return { warned: false, suspended: false };
 
   const message = riskMessage({
     decision,
     kind: input.kind,
     ip: input.ip,
-    cityCount: cityLabels.length,
+    countryCount: countryLabels.length,
     regionCount: regionLabels.length,
-    cityLabels,
+    cityCount: cityLabels.length,
+    countryLabels,
     regionLabels,
+    cityLabels,
   });
 
   const { event, created } = await createRiskEvent({

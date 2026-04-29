@@ -34,6 +34,10 @@ function reasonLabel(reason: SubscriptionRiskEvent["reason"]) {
       return "省/地区异常警告";
     case "REGION_VARIANCE_SUSPEND":
       return "省/地区异常暂停";
+    case "COUNTRY_VARIANCE_WARNING":
+      return "国家异常警告";
+    case "COUNTRY_VARIANCE_SUSPEND":
+      return "国家异常暂停";
   }
 }
 

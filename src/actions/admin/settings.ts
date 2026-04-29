@@ -33,6 +33,8 @@ const settingsSchema = z.object({
   subscriptionRiskCitySuspend: z.coerce.number().int().min(2).max(100).optional(),
   subscriptionRiskRegionWarning: z.coerce.number().int().min(2).max(100).optional(),
   subscriptionRiskRegionSuspend: z.coerce.number().int().min(2).max(100).optional(),
+  subscriptionRiskCountryWarning: z.coerce.number().int().min(2).max(100).optional(),
+  subscriptionRiskCountrySuspend: z.coerce.number().int().min(2).max(100).optional(),
   subscriptionRiskIpLimitPerHour: z.coerce.number().int().min(1).max(100000).optional(),
   subscriptionRiskTokenLimitPerHour: z.coerce.number().int().min(1).max(100000).optional(),
   inviteRewardEnabled: z.string().optional(),
@@ -119,6 +121,10 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
       parsed.subscriptionRiskRegionWarning ?? current.subscriptionRiskRegionWarning,
     subscriptionRiskRegionSuspend:
       parsed.subscriptionRiskRegionSuspend ?? current.subscriptionRiskRegionSuspend,
+    subscriptionRiskCountryWarning:
+      parsed.subscriptionRiskCountryWarning ?? current.subscriptionRiskCountryWarning,
+    subscriptionRiskCountrySuspend:
+      parsed.subscriptionRiskCountrySuspend ?? current.subscriptionRiskCountrySuspend,
     subscriptionRiskIpLimitPerHour:
       parsed.subscriptionRiskIpLimitPerHour ?? current.subscriptionRiskIpLimitPerHour,
     subscriptionRiskTokenLimitPerHour:
@@ -143,6 +149,9 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
   }
   if (next.subscriptionRiskRegionSuspend < next.subscriptionRiskRegionWarning) {
     throw new Error("省/地区暂停阈值不能小于省/地区警告阈值");
+  }
+  if (next.subscriptionRiskCountrySuspend < next.subscriptionRiskCountryWarning) {
+    throw new Error("国家暂停阈值不能小于国家警告阈值");
   }
 
   if (next.smtpEnabled || next.emailVerificationRequired) {
