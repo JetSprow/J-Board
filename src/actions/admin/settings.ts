@@ -9,6 +9,7 @@ import { actorFromSession, recordAuditLog } from "@/services/audit";
 import { getAppConfig } from "@/services/app-config";
 import { normalizeSiteUrl } from "@/services/site-url";
 import { encrypt } from "@/lib/crypto";
+import { getErrorMessage } from "@/lib/errors";
 import { sendSmtpTestEmail } from "@/services/email";
 
 const settingsSchema = z.object({
@@ -55,15 +56,10 @@ type SmtpTestActionResult =
 
 function formatActionError(error: unknown, fallback: string) {
   if (error instanceof z.ZodError) {
-    return error.issues[0]?.message ?? fallback;
+    const details = error.issues.map((issue) => issue.message).filter(Boolean).join("；");
+    return details || getErrorMessage(error, fallback);
   }
-  if (error instanceof Error && error.message.trim()) {
-    return error.message.trim();
-  }
-  if (typeof error === "string" && error.trim()) {
-    return error.trim();
-  }
-  return fallback;
+  return getErrorMessage(error, fallback);
 }
 
 async function assertSmtpTestRateLimit(userId: string) {

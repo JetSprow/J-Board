@@ -19,11 +19,11 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "请求体不是有效 JSON，期望格式：{ latencies: [{ carrier, latencyMs }] }" }, { status: 400 });
   }
 
   if (!Array.isArray(body.latencies) || body.latencies.length === 0) {
-    return NextResponse.json({ error: "Missing latencies" }, { status: 400 });
+    return NextResponse.json({ error: "缺少延迟数据：latencies 必须是非空数组" }, { status: 400 });
   }
 
   const validCarriers = new Set(["telecom", "unicom", "mobile"]);

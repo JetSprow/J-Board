@@ -72,7 +72,7 @@ export function NodeActions({ node, siteUrl }: { node: NodeActionValue; siteUrl:
               try {
                 const res = await testNodeConnection(node.id);
                 if (res.success) toast.success(res.message);
-                else toast.error(res.message);
+                else toast.error(getErrorMessage(res.message, "节点测试失败"));
               } catch (error) {
                 toast.error(getErrorMessage(error, "测试失败"));
               }

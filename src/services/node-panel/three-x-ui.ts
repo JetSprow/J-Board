@@ -114,7 +114,7 @@ export class ThreeXUIAdapter implements NodePanelAdapter {
     if (!res.ok) {
       throw new Error(data.msg || `3x-ui API HTTP ${res.status}`);
     }
-    if (!data.success) throw new Error(data.msg || "3x-ui API error");
+    if (!data.success) throw new Error(data.msg || `3x-ui 接口返回失败但没有错误消息：${path}`);
     return data.obj as T;
   }
 
@@ -182,7 +182,7 @@ export class ThreeXUIAdapter implements NodePanelAdapter {
       return false;
     }
 
-    throw new Error(`登录失败：${lastMessage || "未知错误"}`);
+    throw new Error(`登录失败：${lastMessage || "面板没有返回具体错误内容，请检查地址、账号密码和面板状态"}`);
   }
 
   async getInbounds(): Promise<PanelInbound[]> {
@@ -223,7 +223,7 @@ export class ThreeXUIAdapter implements NodePanelAdapter {
     enable: boolean,
   ): Promise<void> {
     const inbound = await this.getInbound(inboundId);
-    if (!inbound) throw new Error("Inbound not found");
+    if (!inbound) throw new Error(`3x-ui 入站不存在：面板入站 ID ${inboundId} 未找到，请重新同步节点入站`);
 
     const settings = parseInboundSettings(inbound.settings);
     const client = settings.clients?.find((item) => {
@@ -232,7 +232,7 @@ export class ThreeXUIAdapter implements NodePanelAdapter {
         || item.auth === clientCredential
         || item.email === clientCredential;
     });
-    if (!client) throw new Error("Client not found");
+    if (!client) throw new Error(`3x-ui 客户端不存在：${clientCredential}，请重新同步流量或重置订阅访问`);
 
     client.enable = enable;
     await this.jsonRequest(`/panel/api/inbounds/updateClient/${encodeURIComponent(this.getClientPrimaryKey(inbound.protocol, client))}`, {
@@ -327,7 +327,7 @@ export class ThreeXUIAdapter implements NodePanelAdapter {
       case "hysteria2":
         return JSON.stringify({ clients: [{ ...base, auth: params.uuid }] });
       default:
-        throw new Error(`Unsupported protocol: ${params.protocol}`);
+        throw new Error(`3x-ui 客户端配置失败：不支持的协议 ${params.protocol}`);
     }
   }
 }

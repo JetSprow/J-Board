@@ -20,11 +20,11 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "请求体不是有效 JSON，期望格式：{ traces: [{ carrier, hops }] }" }, { status: 400 });
   }
 
   if (!Array.isArray(body.traces) || body.traces.length === 0) {
-    return NextResponse.json({ error: "Missing traces" }, { status: 400 });
+    return NextResponse.json({ error: "缺少路由追踪数据：traces 必须是非空数组" }, { status: 400 });
   }
 
   const validCarriers = new Set(["telecom", "unicom", "mobile"]);

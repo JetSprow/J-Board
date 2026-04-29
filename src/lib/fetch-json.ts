@@ -6,7 +6,8 @@ function extractApiError(payload: unknown): string | null {
   }
 
   const error = (payload as { error?: unknown }).error;
-  return typeof error === "string" && error.trim() ? error.trim() : null;
+  if (typeof error === "string" && error.trim()) return error.trim();
+  return getErrorMessage(payload, "请求失败");
 }
 
 export async function fetchJson<T>(

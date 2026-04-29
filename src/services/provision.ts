@@ -42,7 +42,7 @@ export async function provisionSubscriptionWithDb(
     return applyTrafficTopup(order, db);
   }
 
-  throw new Error(`Unsupported order kind: ${String(order.kind)}`);
+  throw new Error(`开通订阅失败：不支持的订单类型 ${String(order.kind)}`);
 }
 
 async function getNewPurchaseItems(order: PaidOrder, db: DbClient): Promise<NewOrderItem[]> {
@@ -191,7 +191,7 @@ async function applyRenewal(order: PaidOrder, db: DbClient): Promise<string[]> {
     throw new Error("续费目标订阅与订单不匹配");
   }
   if (subscription.status !== "ACTIVE" || subscription.endDate <= new Date()) {
-    throw new Error("续费失败：目标订阅已过期或不可用");
+    throw new Error(`续费失败：目标订阅状态为 ${subscription.status}，到期时间为 ${subscription.endDate.toISOString()}`);
   }
 
   const now = new Date();

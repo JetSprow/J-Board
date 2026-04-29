@@ -15,11 +15,11 @@ export async function GET(req: Request) {
   const token = url.searchParams.get("token");
 
   if (!userId || !token) {
-    return NextResponse.json({ error: "Missing subscription token" }, { status: 401 });
+    return NextResponse.json({ error: "总订阅链接缺少 userId 或 token 参数，请从订阅页面重新复制完整链接" }, { status: 401 });
   }
 
   if (!verifyAggregateSubscriptionToken(userId, token)) {
-    return NextResponse.json({ error: "Invalid subscription token" }, { status: 401 });
+    return NextResponse.json({ error: "总订阅 token 无效，请登录后在订阅页面重新复制链接" }, { status: 401 });
   }
 
   const format = resolveSubscriptionFormat(url.searchParams, req.headers.get("user-agent"));

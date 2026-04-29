@@ -13,7 +13,10 @@ export async function GET(req: Request) {
   const range = searchParams.get("range") ?? "1d";
 
   if (!nodeId || nodeId.length > 128 || !RANGES[range]) {
-    return NextResponse.json({ error: "Invalid params" }, { status: 400 });
+    return NextResponse.json(
+      { error: "参数错误：nodeId 不能为空且长度不超过 128，range 只能是 1d、7d 或 30d" },
+      { status: 400 },
+    );
   }
 
   const { ms, bucketMs } = RANGES[range];

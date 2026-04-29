@@ -5,7 +5,7 @@ const ALGORITHM = "aes-256-gcm";
 function getKey() {
   const raw = process.env.ENCRYPTION_KEY;
   if (!raw || Buffer.byteLength(raw, "utf-8") < 32) {
-    throw new Error("ENCRYPTION_KEY must be at least 32 bytes");
+    throw new Error("加密配置错误：ENCRYPTION_KEY 未配置或长度不足 32 字节");
   }
   return Buffer.from(raw, "utf-8").subarray(0, 32);
 }
@@ -21,7 +21,7 @@ export function encrypt(text: string): string {
 export function decrypt(data: string): string {
   const parts = data.split(":");
   if (parts.length !== 3) {
-    throw new Error("Invalid encrypted data format");
+    throw new Error("解密失败：加密数据格式不正确，期望 iv:authTag:ciphertext 三段内容");
   }
   const [ivHex, authTagHex, encryptedHex] = parts;
   const decipher = crypto.createDecipheriv(ALGORITHM, getKey(), Buffer.from(ivHex, "hex"));

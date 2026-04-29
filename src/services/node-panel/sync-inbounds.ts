@@ -89,7 +89,7 @@ function errorMessage(error: unknown): string {
     }
     if (error.message) return error.message;
   }
-  return "未知错误";
+  return "未知错误：没有收到面板或网络层返回的具体错误内容";
 }
 
 async function repairJBoardClientSubIds(

@@ -15,7 +15,7 @@ export function usePlanAvailabilityCheck(planId: string) {
       if (result.available) {
         toast.success("这款套餐现在可以购买");
       } else {
-        toast.error(result.message);
+        toast.error(getErrorMessage(result.message, "这款套餐暂时不可购买"));
       }
     } catch (error) {
       toast.error(getErrorMessage(error, "暂时无法确认补位时间"));

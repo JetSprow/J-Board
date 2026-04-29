@@ -60,7 +60,7 @@ export function RenewalButton({
     try {
       const result = await purchaseRenewal(subscriptionId, renewalDays);
       if (!result.ok) {
-        toast.error(result.error);
+        toast.error(getErrorMessage(result.error, "创建续费订单失败"));
         return;
       }
       router.push(`/pay/${result.orderId}`);

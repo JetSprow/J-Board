@@ -58,7 +58,7 @@ async function generateUniqueInviteCode(): Promise<string> {
     }
   }
 
-  throw new Error("邀请码生成失败，请稍后重试");
+  throw new Error("邀请码生成失败：连续 10 次生成的随机码都已存在，请稍后重试");
 }
 
 export async function updateAccountProfile(formData: FormData) {

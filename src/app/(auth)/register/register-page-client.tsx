@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TurnstileWidget } from "@/components/shared/turnstile-widget";
+import { getErrorMessage } from "@/lib/errors";
 import { AuthCard, AuthErrorMessage, AuthShell } from "../_components/auth-shell";
 
 export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
@@ -44,13 +45,15 @@ export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
           turnstileToken,
         }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null) as { error?: unknown; requiresEmailVerification?: unknown } | null;
       if (!response.ok) {
-        setError(data.error || "注册失败");
+        setError(getErrorMessage(data, `注册失败 (HTTP ${response.status})`));
       } else {
-        setRequiresEmailVerification(Boolean(data.requiresEmailVerification));
+        setRequiresEmailVerification(Boolean(data?.requiresEmailVerification));
         setSuccess(true);
       }
+    } catch (error) {
+      setError(getErrorMessage(error, "注册失败"));
     } finally {
       setLoading(false);
     }

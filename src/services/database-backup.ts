@@ -6,7 +6,7 @@ import { spawn } from "child_process";
 function getDatabaseUrl() {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL 未配置");
+    throw new Error("数据库备份失败：DATABASE_URL 未配置，无法连接数据库");
   }
   return url;
 }

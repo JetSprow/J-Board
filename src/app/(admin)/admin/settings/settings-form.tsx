@@ -59,7 +59,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
     try {
       const result = await saveAppSettings(new FormData(form));
       if (!result.ok) {
-        toast.error(result.error);
+        toast.error(getErrorMessage(result.error, "保存设置失败"));
         return;
       }
       clearPasswordField(form);
@@ -86,8 +86,8 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         }
         toast.error(
           result.settingsSaved
-            ? `设置已保存，但测试邮件没有发出：${result.error}`
-            : result.error,
+            ? `设置已保存，但测试邮件没有发出：${getErrorMessage(result.error, "测试邮件发送失败")}`
+            : getErrorMessage(result.error, "测试邮件发送失败"),
         );
         return;
       }

@@ -33,8 +33,8 @@ async function getProxyPlanForCart(planId: string) {
     },
   });
 
-  if (plan.type !== "PROXY") throw new Error("套餐类型错误");
-  if (!plan.isActive) throw new Error("套餐已下架");
+  if (plan.type !== "PROXY") throw new Error(`套餐类型不匹配：${plan.name} 是 ${plan.type}，不能作为代理套餐加入购物车`);
+  if (!plan.isActive) throw new Error(`套餐已下架：${plan.name} 当前不可购买`);
   return plan;
 }
 
@@ -115,8 +115,8 @@ export async function addProxyPlanToCart(
 export async function addStreamingPlanToCart(planId: string) {
   const session = await requireAuth();
   const plan = await prisma.subscriptionPlan.findUniqueOrThrow({ where: { id: planId } });
-  if (plan.type !== "STREAMING") throw new Error("套餐类型错误");
-  if (!plan.isActive) throw new Error("套餐已下架");
+  if (plan.type !== "STREAMING") throw new Error(`套餐类型不匹配：${plan.name} 是 ${plan.type}，不能作为流媒体套餐加入购物车`);
+  if (!plan.isActive) throw new Error(`套餐已下架：${plan.name} 当前不可购买`);
 
   const availability = await getPlanAvailability(plan, { userId: session.user.id });
   if (!availability.available) {

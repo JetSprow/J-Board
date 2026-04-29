@@ -12,7 +12,7 @@ export async function authenticateAgent(
 ): Promise<{ nodeId: string } | NextResponse> {
   const authHeader = req.headers.get("authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "认证失败：请求头缺少 Bearer Token" }, { status: 401 });
   }
   const token = authHeader.slice(7);
 
@@ -38,7 +38,7 @@ export async function authenticateAgent(
     }
   }
 
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return NextResponse.json({ error: "认证失败：Token 无效、已撤销或节点未配置探测 Token" }, { status: 401 });
 }
 
 /** Type guard: true when authenticateAgent returned an error response */

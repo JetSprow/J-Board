@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmActionButton } from "@/components/shared/confirm-action-button";
 import { deletePlanPermanently, togglePlan } from "@/actions/admin/plans";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 import {
   PlanForm,
   type PlanFormValue,
@@ -39,8 +40,7 @@ export function PlanActions({
             toast.success(isActive ? "套餐已下架" : "套餐已上架");
             router.refresh();
           } catch (error) {
-            const message = error instanceof Error ? error.message : "切换失败";
-            toast.error(message);
+            toast.error(getErrorMessage(error, "切换套餐上下架状态失败"));
           }
         }}
       >

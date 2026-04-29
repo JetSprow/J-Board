@@ -17,7 +17,7 @@ export async function GET(
   const token = url.searchParams.get("token");
 
   if (!token) {
-    return NextResponse.json({ error: "Missing token" }, { status: 401 });
+    return NextResponse.json({ error: "订阅链接缺少 token 参数，请从订阅页面重新复制完整链接" }, { status: 401 });
   }
 
   const sub = await prisma.userSubscription.findUnique({
@@ -25,11 +25,11 @@ export async function GET(
   });
 
   if (!sub || sub.downloadToken !== token) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    return NextResponse.json({ error: "订阅 token 无效或已被重置，请在订阅详情页重新复制链接" }, { status: 401 });
   }
 
   if (sub.status !== "ACTIVE") {
-    return NextResponse.json({ error: "Subscription inactive" }, { status: 403 });
+    return NextResponse.json({ error: `订阅当前状态为 ${sub.status}，只有 ACTIVE 状态可以拉取配置` }, { status: 403 });
   }
 
   const format = resolveSubscriptionFormat(url.searchParams, req.headers.get("user-agent"));
