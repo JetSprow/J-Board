@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { saveAppSettings, sendSmtpTestMessage } from "@/actions/admin/settings";
+import { saveAppSettings, testSmtpSettings } from "@/actions/admin/settings";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -52,7 +52,11 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
   async function handleSubmit(formData: FormData) {
     setSaving(true);
     try {
-      await saveAppSettings(formData);
+      const result = await saveAppSettings(formData);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
       toast.success("设置已保存");
     } catch (error) {
       toast.error(getErrorMessage(error, "保存失败"));
@@ -67,8 +71,16 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
 
     setTestingEmail(true);
     try {
-      await sendSmtpTestMessage(new FormData(form));
-      toast.success("测试邮件已发送");
+      const result = await testSmtpSettings(new FormData(form));
+      if (!result.ok) {
+        toast.error(
+          result.settingsSaved
+            ? `设置已保存，但测试邮件没有发出：${result.error}`
+            : result.error,
+        );
+        return;
+      }
+      toast.success("设置已保存，测试邮件已发送");
     } catch (error) {
       toast.error(getErrorMessage(error, "测试邮件发送失败"));
     } finally {
@@ -208,7 +220,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           <Mail className="size-4 text-primary" /> SMTP 邮件服务
         </div>
         <p className="text-xs leading-5 text-muted-foreground">
-          用于注册邮箱验证、忘记密码和账户邮箱变更。密码留空会保留当前配置；测试邮件会使用已保存的配置。
+          用于注册邮箱验证、忘记密码和账户邮箱变更。密码留空会保留当前配置；测试会先保存当前 SMTP 设置，再发送测试邮件。
         </p>
         <div className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">

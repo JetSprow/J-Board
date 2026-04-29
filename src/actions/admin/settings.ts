@@ -38,6 +38,30 @@ const settingsSchema = z.object({
   smtpFromEmail: z.string().trim().email("发件邮箱格式不正确").optional().or(z.literal("")),
 });
 
+const smtpTestEmailSchema = z.string().trim().email("请输入正确的测试邮箱");
+const smtpTestSettingsSchema = settingsSchema.extend({
+  smtpTestEmail: smtpTestEmailSchema,
+});
+
+type AdminSession = Awaited<ReturnType<typeof requireAdmin>>;
+type SettingsActionResult = { ok: true } | { ok: false; error: string };
+type SmtpTestActionResult =
+  | { ok: true }
+  | { ok: false; error: string; settingsSaved?: boolean };
+
+function formatActionError(error: unknown, fallback: string) {
+  if (error instanceof z.ZodError) {
+    return error.issues[0]?.message ?? fallback;
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+  if (typeof error === "string" && error.trim()) {
+    return error.trim();
+  }
+  return fallback;
+}
+
 function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Awaited<ReturnType<typeof getAppConfig>>) {
   const smtpEnabled = parsed.smtpEnabled === "true";
   const emailVerificationRequired = parsed.emailVerificationRequired === "true";
@@ -87,9 +111,22 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
   return next;
 }
 
-export async function saveAppSettings(formData: FormData) {
-  const session = await requireAdmin();
-  const parsed = settingsSchema.parse(Object.fromEntries(formData));
+function revalidateSettingsViews() {
+  revalidatePath("/admin/settings");
+  revalidatePath("/login");
+  revalidatePath("/register");
+  revalidatePath("/dashboard");
+  revalidatePath("/subscriptions");
+  revalidatePath("/admin/nodes");
+  revalidatePath("/account");
+  revalidatePath("/admin/commerce");
+}
+
+async function persistAppSettings(
+  session: AdminSession,
+  parsed: z.infer<typeof settingsSchema>,
+  message: string,
+) {
   const current = await getAppConfig();
   const next = buildSettingsUpdate(parsed, current);
 
@@ -105,26 +142,49 @@ export async function saveAppSettings(formData: FormData) {
     targetType: "AppConfig",
     targetId: current.id,
     targetLabel: next.siteName,
-    message: "更新系统设置",
+    message,
   });
 
-  revalidatePath("/admin/settings");
-  revalidatePath("/login");
-  revalidatePath("/register");
-  revalidatePath("/dashboard");
-  revalidatePath("/subscriptions");
-  revalidatePath("/admin/nodes");
-  revalidatePath("/account");
-  revalidatePath("/admin/commerce");
+  revalidateSettingsViews();
+
+  return next;
 }
 
+export async function saveAppSettings(formData: FormData): Promise<SettingsActionResult> {
+  try {
+    const session = await requireAdmin();
+    const parsed = settingsSchema.parse(Object.fromEntries(formData));
+    await persistAppSettings(session, parsed, "更新系统设置");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: formatActionError(error, "保存失败") };
+  }
+}
 
-const smtpTestSchema = z.object({
-  smtpTestEmail: z.string().trim().email("请输入正确的测试邮箱"),
-});
+export async function testSmtpSettings(formData: FormData): Promise<SmtpTestActionResult> {
+  let parsed: z.infer<typeof smtpTestSettingsSchema>;
+  let next: Awaited<ReturnType<typeof persistAppSettings>>;
 
-export async function sendSmtpTestMessage(formData: FormData) {
-  await requireAdmin();
-  const parsed = smtpTestSchema.parse(Object.fromEntries(formData));
-  await sendSmtpTestEmail(parsed.smtpTestEmail);
+  try {
+    const session = await requireAdmin();
+    parsed = smtpTestSettingsSchema.parse(Object.fromEntries(formData));
+    next = await persistAppSettings(session, parsed, "测试发信前更新系统设置");
+  } catch (error) {
+    return { ok: false, error: formatActionError(error, "测试邮件发送失败") };
+  }
+
+  if (!next.smtpEnabled) {
+    return { ok: false, settingsSaved: true, error: "测试发信前请先开启邮件服务" };
+  }
+
+  try {
+    await sendSmtpTestEmail(parsed.smtpTestEmail);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      settingsSaved: true,
+      error: formatActionError(error, "请检查 SMTP 配置后重试"),
+    };
+  }
 }
