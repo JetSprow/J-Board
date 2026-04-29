@@ -27,6 +27,7 @@ export default async function AdminSettingsPage() {
           siteUrl: config.siteUrl,
           subscriptionUrl: config.subscriptionUrl,
           supportContact: config.supportContact,
+          supportOpenTicketLimit: config.supportOpenTicketLimit,
           maintenanceNotice: config.maintenanceNotice,
           siteNotice: config.siteNotice,
           allowRegistration: config.allowRegistration,

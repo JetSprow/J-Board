@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Eye } from "lucide-react";
 import { DataTableShell } from "@/components/admin/data-table-shell";
 import {
   DataTable,
@@ -14,6 +15,7 @@ import {
   SupportTicketStatusBadge,
 } from "@/components/support/ticket-badges";
 import { AdminSupportTicketActions } from "@/components/support/admin-ticket-actions";
+import { buttonVariants } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import type { AdminSupportTicketRow } from "../support-data";
 
@@ -63,7 +65,14 @@ export function AdminSupportTable({ tickets }: AdminSupportTableProps) {
                 <time dateTime={ticket.updatedAt.toISOString()}>{formatDate(ticket.updatedAt)}</time>
               </DataTableCell>
               <DataTableCell>
-                <div className="flex justify-end">
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Link
+                    href={`/admin/support/${ticket.id}`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    <Eye className="size-3.5" />
+                    查看详情
+                  </Link>
                   <AdminSupportTicketActions ticketId={ticket.id} />
                 </div>
               </DataTableCell>

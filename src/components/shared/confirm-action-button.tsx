@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentProps, type ReactNode } from "react";
+import { useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -49,8 +49,12 @@ export function ConfirmActionButton({
 }: ConfirmActionButtonProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const loadingRef = useRef(false);
 
   async function runAction() {
+    if (loadingRef.current) return;
+
+    loadingRef.current = true;
     setLoading(true);
     try {
       await onConfirm();
@@ -60,6 +64,7 @@ export function ConfirmActionButton({
     } catch (error) {
       toast.error(getErrorMessage(error, errorMessage));
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
   }

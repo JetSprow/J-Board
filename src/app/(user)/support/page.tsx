@@ -3,10 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { PageHeader, PageShell } from "@/components/shared/page-shell";
 import { prisma } from "@/lib/prisma";
+import { getAppConfig } from "@/services/app-config";
 import { reasonLabel } from "@/services/subscription-risk-review";
 import { CreateSupportTicketForm } from "./_components/create-support-ticket-form";
 import { UserSupportTicketTable } from "./_components/user-support-ticket-table";
-import { getUserSupportTickets } from "./support-data";
+import { getUserOpenSupportTicketCount, getUserSupportTickets } from "./support-data";
 
 export const metadata: Metadata = {
   title: "工单售后",
@@ -21,8 +22,10 @@ export default async function SupportPage({
   const session = await getServerSession(authOptions);
   const resolvedSearchParams = await searchParams;
   const riskEventId = typeof resolvedSearchParams.riskEventId === "string" ? resolvedSearchParams.riskEventId : "";
-  const [tickets, riskEvent] = await Promise.all([
+  const [tickets, openTicketCount, config, riskEvent] = await Promise.all([
     getUserSupportTickets(session!.user.id),
+    getUserOpenSupportTicketCount(session!.user.id),
+    getAppConfig(),
     riskEventId
       ? prisma.subscriptionRiskEvent.findFirst({
           where: {
@@ -56,7 +59,12 @@ export default async function SupportPage({
         title="需要帮助？"
       />
 
-      <CreateSupportTicketForm defaultOpen={Boolean(preset)} preset={preset} />
+      <CreateSupportTicketForm
+        defaultOpen={Boolean(preset)}
+        openTicketCount={openTicketCount}
+        openTicketLimit={config.supportOpenTicketLimit}
+        preset={preset}
+      />
       <UserSupportTicketTable tickets={tickets} />
     </PageShell>
   );

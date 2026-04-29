@@ -11,7 +11,7 @@ import {
   DataTableRow,
 } from "@/components/shared/data-table";
 import { TaskStatusBadge, taskKindLabels } from "@/components/shared/domain-badges";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { formatDate } from "@/lib/utils";
 import type { AdminTaskRunRow } from "../tasks-data";
 
@@ -85,7 +85,7 @@ export function TaskRunsTable({ tasks }: TaskRunsTableProps) {
                         await retryTaskRun(task.id);
                       }}
                     >
-                      <Button type="submit" size="sm" variant="outline">重试</Button>
+                      <PendingSubmitButton size="sm" variant="outline" pendingLabel="重试中...">重试</PendingSubmitButton>
                     </form>
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import { updateSupportTicketMeta } from "@/actions/admin/support";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Label } from "@/components/ui/label";
 import type { AdminSupportTicketDetail } from "../support-data";
 
@@ -38,7 +38,7 @@ export function SupportTicketMetaForm({ ticket }: { ticket: AdminSupportTicketDe
           <option value="URGENT">紧急</option>
         </select>
       </div>
-      <Button type="submit" variant="outline" size="lg">更新状态</Button>
+      <PendingSubmitButton variant="outline" size="lg" pendingLabel="更新中...">更新状态</PendingSubmitButton>
     </form>
   );
 }

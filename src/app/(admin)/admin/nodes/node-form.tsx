@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,9 +99,9 @@ export function NodeForm({
           <p className="text-xs leading-5 text-muted-foreground">
             延迟和线路探测仍使用探测 Token；节点开通、暂停、删除客户端均回归 3x-ui 面板 API。
           </p>
-          <Button type="submit" size="lg" className="w-full">
+          <PendingSubmitButton size="lg" className="w-full" pendingLabel={isEdit ? "保存中..." : "创建中..."}>
             {isEdit ? "保存并同步入站" : "创建并同步入站"}
-          </Button>
+          </PendingSubmitButton>
         </form>
       </DialogContent>
     </Dialog>

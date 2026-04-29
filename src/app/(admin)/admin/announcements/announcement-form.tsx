@@ -10,6 +10,7 @@ import {
   createAnnouncement,
   updateAnnouncement,
 } from "@/actions/admin/announcements";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -210,9 +211,9 @@ export function AnnouncementForm({
             </select>
           </div>
 
-          <Button type="submit" className="w-full">
+          <PendingSubmitButton className="w-full" pendingLabel="保存中...">
             保存修改
-          </Button>
+          </PendingSubmitButton>
         </form>
       </DialogContent>
     </Dialog>
@@ -343,9 +344,9 @@ export function CreateAnnouncementButton({
             </select>
           </div>
 
-          <Button type="submit" className="w-full">
+          <PendingSubmitButton className="w-full" pendingLabel="发布中...">
             发布
-          </Button>
+          </PendingSubmitButton>
         </form>
       </DialogContent>
     </Dialog>

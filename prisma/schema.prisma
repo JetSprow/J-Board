@@ -756,6 +756,7 @@ model AppConfig {
   emailVerificationRequired         Boolean  @default(false)
   requireInviteCode                 Boolean  @default(false)
   supportContact                    String?
+  supportOpenTicketLimit            Int      @default(2)
   maintenanceNotice                 String?
   siteNotice                        String?
   autoReminderDispatchEnabled       Boolean  @default(true)

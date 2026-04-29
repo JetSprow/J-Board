@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { StreamingService } from "@prisma/client";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,9 +81,9 @@ export function ServiceForm({
             <Label>描述</Label>
             <Input name="description" defaultValue={service?.description ?? ""} />
           </div>
-          <Button type="submit" size="lg" className="w-full">
+          <PendingSubmitButton size="lg" className="w-full" pendingLabel={isEdit ? "保存中..." : "创建中..."}>
             {isEdit ? "保存" : "创建"}
-          </Button>
+          </PendingSubmitButton>
         </form>
       </DialogContent>
     </Dialog>

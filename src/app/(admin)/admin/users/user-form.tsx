@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { User } from "@prisma/client";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,9 +83,9 @@ export function UserForm({
               <option value="ADMIN">管理员</option>
             </select>
           </div>
-          <Button type="submit" className="w-full">
+          <PendingSubmitButton className="w-full" pendingLabel={isEdit ? "保存中..." : "创建中..."}>
             {isEdit ? "保存" : "创建"}
-          </Button>
+          </PendingSubmitButton>
         </form>
       </DialogContent>
     </Dialog>

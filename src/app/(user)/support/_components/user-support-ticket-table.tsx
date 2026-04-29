@@ -1,6 +1,6 @@
 import type { SupportTicket } from "@prisma/client";
 import Link from "next/link";
-import { LifeBuoy } from "lucide-react";
+import { Eye, LifeBuoy } from "lucide-react";
 import { DataTableShell } from "@/components/shared/data-table-shell";
 import {
   DataTable,
@@ -67,7 +67,14 @@ export function UserSupportTicketTable({ tickets }: UserSupportTicketTableProps)
                 <time dateTime={ticket.updatedAt.toISOString()}>{formatDate(ticket.updatedAt)}</time>
               </DataTableCell>
               <DataTableCell>
-                <div className="flex justify-end">
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Link
+                    href={`/support/${ticket.id}`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    <Eye className="size-3.5" />
+                    查看详情
+                  </Link>
                   <UserSupportTicketActions ticketId={ticket.id} status={ticket.status} />
                 </div>
               </DataTableCell>

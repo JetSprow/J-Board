@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BatchActionButtonClient } from "@/components/admin/batch-action-button-client";
 import { cn } from "@/lib/utils";
 
 interface BatchActionBarProps {
@@ -36,25 +37,6 @@ export function BatchActionBar({
   );
 }
 
-export function BatchActionButton({
-  value,
-  children,
-  name = "action",
-  destructive,
-  className,
-}: BatchActionButtonProps) {
-  return (
-    <button
-      type="submit"
-      name={value == null ? undefined : name}
-      value={value}
-      className={cn(
-        "btn-base rounded-xl border px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20",
-        destructive ? "btn-danger-3d" : "btn-cream",
-        className,
-      )}
-    >
-      {children}
-    </button>
-  );
+export function BatchActionButton(props: BatchActionButtonProps) {
+  return <BatchActionButtonClient {...props} />;
 }

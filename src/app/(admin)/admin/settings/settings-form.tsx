@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Clock3, Gift, Mail, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Bell, Clock3, Gift, LifeBuoy, Mail, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ interface AppConfig {
   siteUrl: string | null;
   subscriptionUrl: string | null;
   supportContact: string | null;
+  supportOpenTicketLimit: number;
   maintenanceNotice: string | null;
   siteNotice: string | null;
   allowRegistration: boolean;
@@ -65,6 +66,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
 
     const form = event.currentTarget;
     setSaving(true);
@@ -85,6 +87,8 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
   }
 
   async function handleTestEmail() {
+    if (testingEmail) return;
+
     const form = document.getElementById("app-settings-form") as HTMLFormElement | null;
     if (!form) return;
 
@@ -154,6 +158,29 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="supportContact">客服联系方式</Label>
             <Input id="supportContact" name="supportContact" defaultValue={config.supportContact ?? ""} />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <LifeBuoy className="size-4 text-primary" /> 工单售后
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="supportOpenTicketLimit">未关闭工单上限</Label>
+            <Input
+              id="supportOpenTicketLimit"
+              name="supportOpenTicketLimit"
+              type="number"
+              min={1}
+              max={20}
+              step={1}
+              defaultValue={config.supportOpenTicketLimit}
+            />
+            <p className="text-xs leading-5 text-muted-foreground">
+              用户最多可同时保留的未关闭工单，默认 2；关闭后可再次创建。
+            </p>
           </div>
         </div>
       </section>

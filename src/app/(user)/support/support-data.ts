@@ -34,6 +34,15 @@ export async function getUserSupportTickets(userId: string) {
   });
 }
 
+export async function getUserOpenSupportTicketCount(userId: string) {
+  return prisma.supportTicket.count({
+    where: {
+      userId,
+      status: { not: "CLOSED" },
+    },
+  });
+}
+
 export async function getUserSupportTicketDetail({
   ticketId,
   userId,

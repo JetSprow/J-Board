@@ -1,6 +1,6 @@
 import { BellRing } from "lucide-react";
 import { runReminderTask } from "@/actions/admin/tasks";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 
 export function TaskLaunchPanel() {
   return (
@@ -13,7 +13,7 @@ export function TaskLaunchPanel() {
           <p className="font-semibold">提醒派发</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">检查即将到期订阅并生成提醒。</p>
         </div>
-        <Button type="submit" size="sm" variant="outline" className="mt-auto w-full">派发提醒</Button>
+        <PendingSubmitButton size="sm" variant="outline" className="mt-auto w-full" pendingLabel="派发中...">派发提醒</PendingSubmitButton>
       </form>
     </div>
   );

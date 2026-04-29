@@ -19,6 +19,7 @@ const settingsSchema = z.object({
   supportContact: z.string().trim().optional(),
   maintenanceNotice: z.string().trim().optional(),
   siteNotice: z.string().trim().optional(),
+  supportOpenTicketLimit: z.coerce.number().int().min(1).max(20).optional(),
   allowRegistration: z.string().optional(),
   emailVerificationRequired: z.string().optional(),
   requireInviteCode: z.string().optional(),
@@ -98,6 +99,7 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
     siteUrl: normalizeSiteUrl(parsed.siteUrl) || null,
     subscriptionUrl: normalizeSiteUrl(parsed.subscriptionUrl) || null,
     supportContact: parsed.supportContact || null,
+    supportOpenTicketLimit: parsed.supportOpenTicketLimit ?? current.supportOpenTicketLimit,
     maintenanceNotice: parsed.maintenanceNotice || null,
     siteNotice: parsed.siteNotice || null,
     allowRegistration: parsed.allowRegistration === "true",
@@ -174,6 +176,8 @@ function revalidateSettingsViews() {
   revalidatePath("/subscriptions");
   revalidatePath("/admin/nodes");
   revalidatePath("/account");
+  revalidatePath("/support");
+  revalidatePath("/admin/support");
   revalidatePath("/admin/commerce");
   revalidatePath("/admin/subscription-risk");
   revalidatePath("/admin/subscriptions");

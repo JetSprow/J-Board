@@ -1,10 +1,12 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/require-auth";
 import { actorFromSession, recordAuditLog } from "@/services/audit";
+import { getAppConfig } from "@/services/app-config";
 import { createNotification } from "@/services/notifications";
 import {
   createSupportAttachments,
@@ -42,30 +44,50 @@ export async function createSupportTicket(formData: FormData) {
   const body = riskEvent
     ? data.body + "\n\n关联订阅风控事件：" + riskEvent.id + "\n系统判定：" + riskEvent.message
     : data.body;
+  const config = await getAppConfig();
+  const supportOpenTicketLimit = Math.max(1, config.supportOpenTicketLimit);
 
-  const ticket = await prisma.supportTicket.create({
-    data: {
-      userId: session.user.id,
-      subject: data.subject,
-      category: data.category || (riskEvent ? "订阅风控" : null),
-      priority: riskEvent ? "HIGH" : data.priority,
-      status: "OPEN",
-      lastReplyAt: new Date(),
-      replies: {
-        create: {
-          authorUserId: session.user.id,
-          isAdmin: false,
-          body,
+  const ticket = await prisma.$transaction(
+    async (tx) => {
+      const openTicketCount = await tx.supportTicket.count({
+        where: {
+          userId: session.user.id,
+          status: { not: "CLOSED" },
         },
-      },
+      });
+
+      if (openTicketCount >= supportOpenTicketLimit) {
+        throw new Error(
+          `你当前已有 ${openTicketCount} 个未关闭工单，最多只能同时保留 ${supportOpenTicketLimit} 个。请先关闭已处理工单或等待客服处理。`,
+        );
+      }
+
+      return tx.supportTicket.create({
+        data: {
+          userId: session.user.id,
+          subject: data.subject,
+          category: data.category || (riskEvent ? "订阅风控" : null),
+          priority: riskEvent ? "HIGH" : data.priority,
+          status: "OPEN",
+          lastReplyAt: new Date(),
+          replies: {
+            create: {
+              authorUserId: session.user.id,
+              isAdmin: false,
+              body,
+            },
+          },
+        },
+        include: {
+          replies: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      });
     },
-    include: {
-      replies: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
-    },
-  });
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
   const firstReply = ticket.replies[0];
   if (firstReply && attachments.length > 0) {
     await createSupportAttachments({

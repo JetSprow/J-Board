@@ -1,6 +1,6 @@
 import { Paperclip, Send } from "lucide-react";
 import { replySupportTicket } from "@/actions/user/support";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,7 +46,7 @@ export function SupportTicketReplyForm({ ticketId }: SupportTicketReplyFormProps
           仅支持 JPG、PNG、WEBP、GIF、AVIF 图片，最多 3 张，每张不超过 3MB。
         </p>
       </div>
-      <Button type="submit" size="lg" className="w-full sm:w-auto">发送回复</Button>
+      <PendingSubmitButton size="lg" className="w-full sm:w-auto" pendingLabel="发送中...">发送回复</PendingSubmitButton>
     </form>
   );
 }

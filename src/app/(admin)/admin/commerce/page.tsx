@@ -4,7 +4,7 @@ import { createCoupon, createPromotionRule } from "@/actions/admin/commerce";
 import { DetailItem, DetailList } from "@/components/admin/detail-list";
 import { ActiveStatusBadge, StatusBadge } from "@/components/admin/status-badge";
 import { PageHeader, PageShell, SectionHeader } from "@/components/shared/page-shell";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,7 +73,7 @@ export default async function AdminCommercePage() {
                   <option value="false">仅发放可用</option>
                 </select>
               </div>
-              <Button type="submit" className="w-full">创建优惠券</Button>
+              <PendingSubmitButton className="w-full" pendingLabel="创建中...">创建优惠券</PendingSubmitButton>
             </form>
 
             <form action={createPromotionRule} className="form-panel space-y-4">
@@ -96,7 +96,7 @@ export default async function AdminCommercePage() {
                 <Label htmlFor="promotion-sort">排序</Label>
                 <Input id="promotion-sort" name="sortOrder" type="number" defaultValue={100} />
               </div>
-              <Button type="submit" className="w-full">创建满减</Button>
+              <PendingSubmitButton className="w-full" pendingLabel="创建中...">创建满减</PendingSubmitButton>
             </form>
           </section>
         </TabsContent>
