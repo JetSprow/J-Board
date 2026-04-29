@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getAppConfig } from "@/services/app-config";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/request-context";
 import { normalizeEmailAddress, sendRegistrationVerificationEmail } from "@/services/email";
 
 const schema = z.object({
@@ -16,9 +17,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || req.headers.get("x-real-ip")?.trim()
-    || "unknown";
+  const ip = getClientIp(req.headers);
   const { success, remaining } = await rateLimit(`ratelimit:register:${ip}`, 5, 60);
   if (!success) {
     return NextResponse.json(

@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/request-context";
 import { getAppConfig } from "@/services/app-config";
 import { isSmtpConfigured, normalizeEmailAddress, sendPasswordResetEmail, sendRegistrationVerificationEmail, consumePasswordResetToken, verifyEmailToken } from "@/services/email";
 
@@ -22,13 +23,6 @@ const resetPasswordSchema = z.object({
   confirmPassword: z.string().min(6, "确认密码至少 6 位"),
 });
 
-type HeaderList = Awaited<ReturnType<typeof headers>>;
-
-function getClientIp(headerList: HeaderList) {
-  return headerList.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || headerList.get("x-real-ip")?.trim()
-    || "unknown";
-}
 
 async function requestEmailContext(action: string, email: string) {
   const headerList = await headers();

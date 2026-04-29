@@ -5,6 +5,8 @@ import { SubscriptionDetailCards } from "@/components/subscriptions/subscription
 import { SubscriptionTimelineSection } from "@/components/subscriptions/subscription-timeline-section";
 import { TrafficLogList } from "@/components/subscriptions/traffic-log-list";
 import { getAdminSubscriptionDetail } from "./subscription-detail-data";
+import { AdminSubscriptionActions } from "../subscription-actions";
+import { SubscriptionAccessRiskSection } from "./_components/subscription-access-risk-section";
 
 export const metadata: Metadata = {
   title: "订阅详情",
@@ -23,7 +25,7 @@ export default async function AdminSubscriptionDetailPage({
     notFound();
   }
 
-  const { subscription, auditLogs, trafficLogs } = data;
+  const { subscription, auditLogs, trafficLogs, accessLogs, riskEvents, streamingServices } = data;
 
   return (
     <PageShell>
@@ -31,8 +33,22 @@ export default async function AdminSubscriptionDetailPage({
         eyebrow="订阅详情"
         title={subscription.plan.name}
         description={subscription.user.email}
+        actions={
+          <AdminSubscriptionActions
+            subscriptionId={subscription.id}
+            status={subscription.status}
+            type={subscription.plan.type}
+            streamingServices={streamingServices}
+          />
+        }
       />
       <SubscriptionDetailCards subscription={subscription} showClientEmail />
+      <SubscriptionAccessRiskSection
+        accessLogs={accessLogs}
+        riskEvents={riskEvents}
+        owner={subscription.user}
+        subscription={subscription}
+      />
       <SubscriptionTimelineSection logs={auditLogs} />
       <TrafficLogList logs={trafficLogs} />
     </PageShell>

@@ -51,6 +51,7 @@ export default async function AuditLogsPage({
               { label: "service.", value: "service." },
               { label: "node.", value: "node." },
               { label: "task.", value: "task." },
+              { label: "risk.", value: "risk." },
             ],
           },
         ]}

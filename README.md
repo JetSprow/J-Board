@@ -210,6 +210,8 @@ server {
 
 订阅域名套 Cloudflare 时，源站应只允许 Cloudflare 回源或通过 Cloudflare Tunnel 暴露服务，并正确传递 `CF-Connecting-IP` / `X-Forwarded-For`。否则后续订阅访问风控中的真实 IP 可能被直连源站请求伪造。
 
+J-Board 会记录订阅 API 的真实 IP、User-Agent 和可用的地理位置头，并在 24 小时窗口内按城市/省份变化触发风控：4 个城市警告、5 个城市暂停；2 个省/地区警告、3 个省/地区暂停。管理员可在后台“订阅风控”查看关联用户、订阅、IP、地区统计，并将事件标记为待处理、已确认或已解决，必要时可人工恢复被暂停的订阅。Cloudflare 场景建议在 Rules -> Settings -> Managed Transforms 开启 Add visitor location headers，让回源请求带上 `cf-ipcity`、`cf-region`、`cf-region-code` 等字段；未提供城市/省份字段时，系统只记录 IP，不会触发地区变化规则。
+
 ### 手动 Docker 部署
 
 首次启动：

@@ -35,6 +35,29 @@ enum SubscriptionStatus {
   SUSPENDED
 }
 
+enum SubscriptionAccessKind {
+  SINGLE
+  AGGREGATE
+}
+
+enum SubscriptionRiskLevel {
+  WARNING
+  SUSPENDED
+}
+
+enum SubscriptionRiskReason {
+  CITY_VARIANCE_WARNING
+  CITY_VARIANCE_SUSPEND
+  REGION_VARIANCE_WARNING
+  REGION_VARIANCE_SUSPEND
+}
+
+enum SubscriptionRiskReviewStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
 enum PlanPricingMode {
   TRAFFIC_SLIDER
   FIXED_PACKAGE
@@ -277,6 +300,62 @@ model UserSubscription {
 
   @@index([userId])
   @@index([status])
+}
+
+model SubscriptionAccessLog {
+  id             String                 @id @default(cuid())
+  userId         String?
+  subscriptionId String?
+  kind           SubscriptionAccessKind
+  ip             String
+  userAgent      String?
+  country        String?
+  region         String?
+  regionCode     String?
+  city           String?
+  latitude       String?
+  longitude      String?
+  geoSource      String?
+  allowed        Boolean                @default(true)
+  reason         String?
+  createdAt      DateTime               @default(now())
+
+  @@index([subscriptionId, createdAt])
+  @@index([userId, kind, createdAt])
+  @@index([ip, createdAt])
+  @@index([kind, createdAt])
+}
+
+model SubscriptionRiskEvent {
+  id              String                       @id @default(cuid())
+  userId          String?
+  subscriptionId  String?
+  kind            SubscriptionAccessKind
+  level           SubscriptionRiskLevel
+  reason          SubscriptionRiskReason
+  ip              String?
+  countryCount    Int                          @default(0)
+  regionCount     Int                          @default(0)
+  cityCount       Int                          @default(0)
+  countryKeys     Json?
+  regionKeys      Json?
+  cityKeys        Json?
+  message         String
+  dedupeKey       String                       @unique
+  windowStartedAt DateTime
+  reviewStatus    SubscriptionRiskReviewStatus @default(OPEN)
+  reviewNote      String?
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedByEmail String?
+  createdAt       DateTime                     @default(now())
+
+  @@index([subscriptionId, createdAt])
+  @@index([userId, kind, createdAt])
+  @@index([level, createdAt])
+  @@index([reason, createdAt])
+  @@index([reviewStatus, createdAt])
+  @@index([reviewedById])
 }
 
 model StreamingService {

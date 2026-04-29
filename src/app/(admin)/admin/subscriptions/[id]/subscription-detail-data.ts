@@ -34,7 +34,7 @@ export async function getAdminSubscriptionDetail(subscriptionId: string) {
     return null;
   }
 
-  const [auditLogs, trafficLogs] = await Promise.all([
+  const [auditLogs, trafficLogs, accessLogs, riskEvents, streamingServices] = await Promise.all([
     prisma.auditLog.findMany({
       where: {
         targetType: "UserSubscription",
@@ -52,7 +52,37 @@ export async function getAdminSubscriptionDetail(subscriptionId: string) {
           take: 30,
         })
       : Promise.resolve([]),
+    prisma.subscriptionAccessLog.findMany({
+      where: {
+        OR: [
+          { subscriptionId: subscription.id },
+          { userId: subscription.userId, kind: "AGGREGATE" },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.subscriptionRiskEvent.findMany({
+      where: {
+        OR: [
+          { subscriptionId: subscription.id },
+          { userId: subscription.userId, kind: "AGGREGATE" },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    }),
+    prisma.streamingService.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        usedSlots: true,
+        maxSlots: true,
+      },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
-  return { subscription, auditLogs, trafficLogs };
+  return { subscription, auditLogs, trafficLogs, accessLogs, riskEvents, streamingServices };
 }
