@@ -133,7 +133,7 @@ enum SupportTicketPriority {
 model User {
   id              String     @id @default(cuid())
   email           String     @unique
-  emailVerifiedAt DateTime?  @default(now())
+  emailVerifiedAt DateTime?
   password        String
   name            String?
   role            Role       @default(USER)

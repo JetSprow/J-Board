@@ -230,7 +230,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
               <option value="false">关闭</option>
               <option value="true">开启，注册后必须验证邮箱</option>
             </select>
-            <p className="text-xs leading-5 text-muted-foreground">开启后，新用户注册会先收到验证邮件，完成验证后才能登录。</p>
+            <p className="text-xs leading-5 text-muted-foreground">开启后，新用户注册会先收到验证邮件，完成验证后才能登录；关闭后注册成功即可登录。</p>
           </div>
         </div>
       </section>

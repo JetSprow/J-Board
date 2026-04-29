@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getAppConfig } from "@/services/app-config";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { rateLimit } from "@/lib/rate-limit";
-import { normalizeEmailAddress, sendRegistrationVerificationEmail } from "@/services/email";
+import { isSmtpConfigured, normalizeEmailAddress, sendRegistrationVerificationEmail } from "@/services/email";
 
 const schema = z.object({
   email: z.string().email("邮箱格式不正确"),
@@ -51,6 +51,13 @@ export async function POST(req: Request) {
   const { password, name, inviteCode, turnstileToken } = parsed.data;
   const email = normalizeEmailAddress(parsed.data.email);
   const config = await getAppConfig();
+
+  if (config.emailVerificationRequired && !isSmtpConfigured(config)) {
+    return NextResponse.json(
+      { error: "注册暂不可用：管理员已开启邮箱验证，但站点尚未配置 SMTP 邮件服务，无法发送验证邮件" },
+      { status: 503 },
+    );
+  }
 
   if (config.turnstileSecretKey) {
     if (!turnstileToken || !(await verifyTurnstile(turnstileToken, config.turnstileSecretKey))) {

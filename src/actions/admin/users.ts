@@ -26,7 +26,7 @@ export async function createUser(formData: FormData) {
   const data = createUserSchema.parse(Object.fromEntries(formData));
   const hashed = await bcrypt.hash(data.password, 12);
   const user = await prisma.user.create({
-    data: { email: data.email, password: hashed, name: data.name || null, role: data.role },
+    data: { email: data.email, emailVerifiedAt: new Date(), password: hashed, name: data.name || null, role: data.role },
   });
   await recordAuditLog({
     actor: actorFromSession(session),
