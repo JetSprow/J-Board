@@ -1,4 +1,3 @@
-import { getRedis } from "./redis";
 import { randomUUID } from "crypto";
 
 interface RateLimitResult {
@@ -7,12 +6,13 @@ interface RateLimitResult {
   reset: number;
 }
 
-/**
- * Sliding window rate limiter using Redis.
- * @param key - Unique identifier (e.g. `ratelimit:payment:${userId}`)
- * @param limit - Max requests allowed in the window
- * @param windowSeconds - Time window in seconds
- */
+const globalForRateLimit = globalThis as unknown as {
+  rateLimitBuckets?: Map<string, Array<{ score: number; id: string }>>;
+};
+
+const buckets = globalForRateLimit.rateLimitBuckets ?? new Map<string, Array<{ score: number; id: string }>>();
+globalForRateLimit.rateLimitBuckets = buckets;
+
 export async function rateLimit(
   key: string,
   limit: number,
@@ -20,33 +20,22 @@ export async function rateLimit(
 ): Promise<RateLimitResult> {
   const now = Date.now();
   const windowMs = windowSeconds * 1000;
+  const cutoff = now - windowMs;
 
-  try {
-    const redis = getRedis();
-    if (redis.status === "wait") {
-      await redis.connect();
-    }
-
-    const pipeline = redis.pipeline();
-    pipeline.zremrangebyscore(key, 0, now - windowMs);
-    pipeline.zadd(key, now, `${now}:${randomUUID()}`);
-    pipeline.zcard(key);
-    pipeline.expire(key, windowSeconds);
-
-    const results = await pipeline.exec();
-    const count = (results?.[2]?.[1] as number) ?? 0;
-
-    return {
-      success: count <= limit,
-      remaining: Math.max(0, limit - count),
-      reset: Math.ceil(windowSeconds - (now % (windowSeconds * 1000)) / 1000),
-    };
-  } catch {
-    // If Redis is unavailable, degrade gracefully instead of blocking user actions.
-    return {
-      success: true,
-      remaining: limit,
-      reset: windowSeconds,
-    };
+  for (const [bucketKey, items] of buckets) {
+    const active = items.filter((item) => item.score > cutoff);
+    if (active.length > 0) buckets.set(bucketKey, active);
+    else buckets.delete(bucketKey);
   }
+
+  const bucket = buckets.get(key) ?? [];
+  bucket.push({ score: now, id: `${now}:${randomUUID()}` });
+  buckets.set(key, bucket);
+
+  const count = bucket.length;
+  return {
+    success: count <= limit,
+    remaining: Math.max(0, limit - count),
+    reset: Math.ceil(windowSeconds - (now % windowMs) / 1000),
+  };
 }

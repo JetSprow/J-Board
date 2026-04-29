@@ -12,8 +12,8 @@ J-Board 的定位很明确：它不是新的节点控制面，也不替代 3x-ui
 用户浏览器 / 客户端订阅
   ↓
 Next.js App Router 面板
-  ├─ PostgreSQL：用户、订单、套餐、订阅、审计、风控事件
-  ├─ Redis：限流、后台任务与缓存辅助
+  ├─ SQLite：用户、订单、套餐、订阅、审计、风控事件
+  ├─ 进程内限流：无需 Redis 单独容器
   ├─ 3x-ui API：同步入站、开通/暂停/删除代理客户端
   └─ Agent API：接收 jboard-agent 上报的延迟、路由、节点真实连接日志
 
@@ -73,9 +73,8 @@ J-Board 面板和 Agent 使用相对独立的版本节奏。
 ## 技术栈
 
 - Next.js 16 App Router + React 19
-- Prisma 7 + PostgreSQL 16
+- Prisma 7 + SQLite
 - NextAuth 4 Credentials
-- Redis 7
 - Tailwind CSS 4 + Base UI + Sonner + Recharts
 - Nodemailer SMTP 邮件
 - MaxMind MMDB GeoIP
@@ -118,9 +117,7 @@ J-Board 面板和 Agent 使用相对独立的版本节奏。
 | `SUBSCRIPTION_URL` | 订阅访问地址 | 可选。用于生成客户端订阅链接，例如 `https://sub.example.com`；留空时复用 `NEXTAUTH_URL`。 |
 | `NEXTAUTH_SECRET` | 登录会话密钥 | 生产环境必须使用随机长字符串。 |
 | `ENCRYPTION_KEY` | 敏感信息加密密钥 | 至少 32 字节。生产使用后不要更换，否则 3x-ui 密码、探测 Token、SMTP 密码、流媒体凭据等已加密数据会无法解密。 |
-| `DATABASE_URL` | PostgreSQL 连接 | 本地工具使用；Docker 部署时 Compose 会覆盖为容器内数据库地址。 |
-| `POSTGRES_PASSWORD` | Docker PostgreSQL 密码 | 一键脚本会自动生成。 |
-| `REDIS_URL` | Redis 连接 | 本地工具使用；Docker 部署时 Compose 会覆盖为容器内 Redis 地址。 |
+| `DATABASE_URL` | SQLite 文件地址 | 本地默认 `file:./storage/jboard.db`；Docker 部署时 Compose 会覆盖为容器内 `/app/storage/jboard.db`。 |
 | `GEOIP_MMDB_PATH` | GeoIP 城市库 | 默认 `data/GeoLite2-City.mmdb`。可换成自己的 MaxMind City MMDB。 |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | 初始管理员 | 首次 `db:seed` 创建管理员账号。已有数据库不会强制重置旧管理员密码。 |
 
@@ -144,7 +141,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/main/script
 | 订阅访问地址 | 用于生成 Clash/V2rayN/Shadowrocket 等客户端订阅链接。可以和网站地址相同，也可以填独立订阅域名，例如 `https://sub.example.com`。 |
 | 本机监听端口 | 默认 `3000`。Nginx、Caddy、宝塔或 1Panel 的反代目标就是 `http://127.0.0.1:3000`。 |
 | 管理员邮箱和密码 | 首次初始化会创建该管理员，脚本完成后会再次打印。 |
-| PostgreSQL 密码、`NEXTAUTH_SECRET`、`ENCRYPTION_KEY` | 可手动输入；回车会自动生成安全值。 |
+| `NEXTAUTH_SECRET`、`ENCRYPTION_KEY` | 可手动输入；回车会自动生成安全值。 |
 
 也可以通过环境变量覆盖默认行为：
 
@@ -170,7 +167,7 @@ APP_DIR=/opt/jboard GH_REPO=JetSprow/J-Board BRANCH=main bash <(curl -fsSL https
 
 ```bash
 cp .env.example .env
-# 编辑 .env，尤其是 NEXTAUTH_URL、SUBSCRIPTION_URL、NEXTAUTH_SECRET、ENCRYPTION_KEY、POSTGRES_PASSWORD、管理员账号
+# 编辑 .env，尤其是 NEXTAUTH_URL、SUBSCRIPTION_URL、NEXTAUTH_SECRET、ENCRYPTION_KEY、管理员账号
 docker compose build init app
 docker compose --profile setup run --rm init
 docker compose up -d app
@@ -444,7 +441,7 @@ shasum -a 256 jboard-agent-linux-amd64 jboard-agent-linux-arm64 > SHA256SUMS
 
 - 不要提交 `.env`、探测 Token、3x-ui 密码、SMTP 密码、支付密钥。
 - 数据库备份包含用户、订单、支付配置、节点凭据和邮件配置，建议加密保存并限制下载权限。
-- 生产环境不要公开 PostgreSQL 和 Redis 端口。
+- 生产环境不要公开 SQLite 文件、备份文件或管理接口。
 - 3x-ui 面板建议限制来源 IP 或使用反向代理鉴权。
 - `ENCRYPTION_KEY` 一旦生产使用不要随意更换。
 - 管理后台账号建议使用强密码和专用邮箱。

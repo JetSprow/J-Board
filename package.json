@@ -20,7 +20,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "ioredis": "^5.10.1",
     "lucide-react": "^1.8.0",
     "maxmind": "^5.0.6",
     "next": "16.2.4",

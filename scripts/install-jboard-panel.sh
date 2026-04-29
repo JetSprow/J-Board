@@ -14,7 +14,6 @@ SITE_NAME=""
 ADMIN_EMAIL=""
 ADMIN_PASSWORD=""
 ADMIN_NAME=""
-POSTGRES_PASSWORD=""
 NEXTAUTH_SECRET=""
 ENCRYPTION_KEY=""
 ENV_REUSED="0"
@@ -285,17 +284,14 @@ write_env() {
     printf '# J-Board panel\n'
     printf 'APP_PORT="%s"\n' "$(env_escape "$APP_PORT")"
     printf 'SITE_NAME="%s"\n' "$(env_escape "$SITE_NAME")"
-    printf '\n# PostgreSQL for local tools; Docker Compose overrides host to db\n'
-    printf 'POSTGRES_PASSWORD="%s"\n' "$(env_escape "$POSTGRES_PASSWORD")"
-    printf 'DATABASE_URL="postgresql://jboard:%s@localhost:5432/jboard"\n' "$(env_escape "$POSTGRES_PASSWORD")"
+    printf '\n# SQLite for local tools and Docker\n'
+    printf 'DATABASE_URL="file:./storage/jboard.db"\n'
     printf '\n# NextAuth\n'
     printf 'NEXTAUTH_SECRET="%s"\n' "$(env_escape "$NEXTAUTH_SECRET")"
     printf 'NEXTAUTH_URL="%s"\n' "$(env_escape "$PUBLIC_URL")"
     printf 'SUBSCRIPTION_URL="%s"\n' "$(env_escape "$SUBSCRIPTION_PUBLIC_URL")"
     printf '\n# Must be at least 32 bytes, used for AES-256-GCM encryption\n'
     printf 'ENCRYPTION_KEY="%s"\n' "$(env_escape "$ENCRYPTION_KEY")"
-    printf '\n# Redis connection URL for local tools; Docker Compose overrides host to redis\n'
-    printf 'REDIS_URL="redis://localhost:6379"\n'
     printf '\n# Initial admin account, used by npm run db:seed on first install\n'
     printf 'ADMIN_EMAIL="%s"\n' "$(env_escape "$ADMIN_EMAIL")"
     printf 'ADMIN_PASSWORD="%s"\n' "$(env_escape "$ADMIN_PASSWORD")"
@@ -341,7 +337,6 @@ configure_env() {
   ADMIN_EMAIL="$(prompt_value "管理员邮箱" "admin@jboard.local")"
   ADMIN_PASSWORD="$(prompt_generated "管理员密码" "$(random_password)" "回车会生成一个安全密码，部署完成后会在结果中显示一次。")"
   ADMIN_NAME="$(prompt_value "管理员昵称" "Admin")"
-  POSTGRES_PASSWORD="$(prompt_generated "PostgreSQL 密码" "$(random_password)")"
   NEXTAUTH_SECRET="$(prompt_generated "NEXTAUTH_SECRET" "$(random_hex 32)")"
   ENCRYPTION_KEY="$(prompt_generated "ENCRYPTION_KEY" "$(random_hex 32)" "生产使用后不要更换 ENCRYPTION_KEY，否则已加密的面板密码、Token、凭据会无法解密。")"
 
