@@ -1,8 +1,8 @@
-# J-Board
+# J-Board Lite
 
-J-Board（也称 JB 面板）是一个面向代理订阅售卖与流媒体共享的全栈管理面板。它负责用户、套餐、订单、支付、订阅、工单、邮件、公告、审计、探测展示与订阅风控；节点实际运行、入站协议、Xray 客户端配置仍由 3x-ui 维护。
+J-Board Lite 是 J-Board 的轻量版本，面向 1C1G 小机器和低资源 Docker 环境优化。它保留代理订阅售卖、流媒体共享、支付、订阅交付、工单、邮件、公告、审计、探测展示与订阅风控等核心功能，同时使用 SQLite 和进程内限流，避免 Postgres、Redis 等额外服务带来的部署负担。
 
-J-Board 的定位很明确：它不是新的节点控制面，也不替代 3x-ui。它把售卖、开通、订阅交付、售后和风险审查做成一个完整面板，并通过只读 Agent 从节点侧采集延迟、路由和 Xray access log 证据。
+J-Board Lite 的定位很明确：它是 J-Board 的轻量化部署版本，不是新的节点控制面，也不替代 3x-ui。节点实际运行、入站协议、Xray 客户端配置仍由 3x-ui 维护；面板负责售卖、开通、订阅交付、售后和风险审查，并通过只读 Agent 从节点侧采集延迟、路由和 Xray access log 证据。
 
 开发进度频道：[@JBoardAnno](https://t.me/JBoardAnno)
 
@@ -22,7 +22,7 @@ Next.js App Router 面板
   └─ jboard-agent：旁路只读探测与日志聚合，不修改 3x-ui 配置
 ```
 
-J-Board 只保存售卖和展示需要的节点镜像数据。入站协议、端口、Reality/TLS、Xray 运行状态和客户端真实配置仍以 3x-ui 为准。
+J-Board Lite 只保存售卖和展示需要的节点镜像数据。入站协议、端口、Reality/TLS、Xray 运行状态和客户端真实配置仍以 3x-ui 为准。
 
 ## 功能概览
 
@@ -55,15 +55,15 @@ J-Board 只保存售卖和展示需要的节点镜像数据。入站协议、端
 节点侧：
 
 - 3x-ui 负责入站、客户端、协议配置和节点运行。
-- J-Board 通过 3x-ui API 同步入站并执行客户端增删改。
+- J-Board Lite 通过 3x-ui API 同步入站并执行客户端增删改。
 - `agent/jboard-agent` 负责三网 TCP 延迟、三网路由追踪和可选 Xray access log 风控上报。
 - Agent 只读日志文件，不重启 Xray，不修改 3x-ui 配置。
 
 ## 版本与发布规则
 
-J-Board 面板和 Agent 使用相对独立的版本节奏。
+J-Board Lite 面板和 Agent 使用相对独立的版本节奏。
 
-- 面板代码变更可以只提交到 `main`，不一定创建 GitHub Release。
+- 面板代码变更可以只提交到 `lite`，不一定创建 GitHub Release。
 - Agent 二进制发生变化时，才需要升级 Agent 版本、打 tag、创建 Release，并上传 `jboard-agent-linux-amd64`、`jboard-agent-linux-arm64`、`SHA256SUMS`。
 - Agent 安装/升级脚本默认下载 GitHub 最新 Release 中的 Agent 产物。
 - 不要为了普通网站页面或后台文案改动强行更新 Agent tag。
@@ -217,9 +217,9 @@ docker compose --profile setup run --rm init sh -lc 'npm run db:push'
 
 ## 反向代理与域名
 
-`NEXTAUTH_URL` 和后台“系统设置 -> 网站 URL”都应该填写面板公网域名，也就是给用户访问、并反向代理到 J-Board 的域名。不要填写 `localhost`、容器名或内网地址，否则登录回调、邮件链接、支付回跳和退出登录提示可能出现错误地址。
+`NEXTAUTH_URL` 和后台“系统设置 -> 网站 URL”都应该填写面板公网域名，也就是给用户访问、并反向代理到 J-Board Lite 的域名。不要填写 `localhost`、容器名或内网地址，否则登录回调、邮件链接、支付回跳和退出登录提示可能出现错误地址。
 
-`SUBSCRIPTION_URL` 和后台“系统设置 -> 订阅 URL”只用于生成客户端订阅链接。它可以和网站 URL 相同；如果希望单独做 Cloudflare/WAF/访问风控，建议使用独立订阅域名，例如 `https://sub.example.com`，并把它也反向代理到同一个 J-Board 服务。
+`SUBSCRIPTION_URL` 和后台“系统设置 -> 订阅 URL”只用于生成客户端订阅链接。它可以和网站 URL 相同；如果希望单独做 Cloudflare/WAF/访问风控，建议使用独立订阅域名，例如 `https://sub.example.com`，并把它也反向代理到同一个 J-Board Lite 服务。
 
 Nginx 示例：
 
@@ -301,9 +301,9 @@ SMTP 配置在后台“系统设置”中完成，密码会加密保存在数据
 1. 在 VPS 安装并配置 3x-ui，确认面板 API 可访问。
 2. 在 3x-ui 中创建真实入站。
 3. 管理后台添加 3x-ui 节点，填写面板地址、用户名和密码。
-4. 保存后 J-Board 会登录 3x-ui 并同步入站到 `NodeInbound`。
+4. 保存后 J-Board Lite 会登录 3x-ui 并同步入站到 `NodeInbound`。
 5. 在代理套餐中绑定已同步入站。
-6. 用户购买代理套餐后，J-Board 调用 3x-ui API 创建客户端，并保存 `NodeClient`。
+6. 用户购买代理套餐后，J-Board Lite 调用 3x-ui API 创建客户端，并保存 `NodeClient`。
 7. 订阅暂停、恢复、删除、重置访问时，同步调用 3x-ui API 更新客户端。
 8. 如需前台展示延迟、线路和节点日志风控，点击“生成探测 Token”，复制一键安装命令到节点执行。
 
@@ -332,7 +332,7 @@ cat /var/lib/jboard-agent/xray-log-state.json
 升级 Agent：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/main/scripts/upgrade-jboard-agent.sh | bash
+curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/lite/scripts/upgrade-jboard-agent.sh | bash
 ```
 
 如果只想手动运行 Agent：
@@ -347,7 +347,7 @@ AUTH_TOKEN=后台生成的探测Token \
 
 ## 订阅访问风控
 
-J-Board 的订阅风控分两层。
+J-Board Lite 的订阅风控分两层。
 
 第一层是订阅 API 访问风控。用户或客户端拉取 `/api/subscription/*` 时，系统记录真实 IP、User-Agent、国家、省/地区、城市、经纬度，并按后台配置判断：
 
@@ -505,7 +505,7 @@ Agent 默认 `XRAY_LOG_START_AT_END=1`，首次启动会从文件末尾开始，
 
 ### Xray client email 带后缀是否有影响
 
-没有影响。J-Board 用户邮箱可能是 `user@example.com`，Xray client email 可能是 `user@example.com-cmojtnp3`。节点日志风控用 Xray access log 里的 client email 匹配本地 `NodeClient.email`，再找到真实用户和订阅。不要手动在 3x-ui 改 client email，否则会导致日志无法归属。
+没有影响。J-Board Lite 用户邮箱可能是 `user@example.com`，Xray client email 可能是 `user@example.com-cmojtnp3`。节点日志风控用 Xray access log 里的 client email 匹配本地 `NodeClient.email`，再找到真实用户和订阅。不要手动在 3x-ui 改 client email，否则会导致日志无法归属。
 
 ## 文档
 
