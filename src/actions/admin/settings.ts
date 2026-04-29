@@ -87,9 +87,16 @@ async function assertSmtpTestRateLimit(userId: string) {
   }
 }
 
+function optionalBoolean(value: string | undefined, fallback: boolean) {
+  return value == null ? fallback : value === "true";
+}
+
 function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Awaited<ReturnType<typeof getAppConfig>>) {
-  const smtpEnabled = parsed.smtpEnabled === "true";
-  const emailVerificationRequired = parsed.emailVerificationRequired === "true";
+  const smtpEnabled = optionalBoolean(parsed.smtpEnabled, current.smtpEnabled);
+  const emailVerificationRequired = optionalBoolean(
+    parsed.emailVerificationRequired,
+    current.emailVerificationRequired,
+  );
   const smtpPassword = parsed.smtpPassword?.trim()
     ? encrypt(parsed.smtpPassword.trim())
     : current.smtpPassword;
@@ -102,17 +109,26 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
     supportOpenTicketLimit: parsed.supportOpenTicketLimit ?? current.supportOpenTicketLimit,
     maintenanceNotice: parsed.maintenanceNotice || null,
     siteNotice: parsed.siteNotice || null,
-    allowRegistration: parsed.allowRegistration === "true",
+    allowRegistration: optionalBoolean(parsed.allowRegistration, current.allowRegistration),
     emailVerificationRequired,
-    requireInviteCode: parsed.requireInviteCode === "true",
-    autoReminderDispatchEnabled: parsed.autoReminderDispatchEnabled === "true",
+    requireInviteCode: optionalBoolean(parsed.requireInviteCode, current.requireInviteCode),
+    autoReminderDispatchEnabled: optionalBoolean(
+      parsed.autoReminderDispatchEnabled,
+      current.autoReminderDispatchEnabled,
+    ),
     reminderDispatchIntervalMinutes:
       parsed.reminderDispatchIntervalMinutes ?? current.reminderDispatchIntervalMinutes,
-    trafficSyncEnabled: parsed.trafficSyncEnabled === "true",
+    trafficSyncEnabled: optionalBoolean(parsed.trafficSyncEnabled, current.trafficSyncEnabled),
     trafficSyncIntervalSeconds:
       parsed.trafficSyncIntervalSeconds ?? current.trafficSyncIntervalSeconds,
-    subscriptionRiskEnabled: parsed.subscriptionRiskEnabled === "true",
-    subscriptionRiskAutoSuspend: parsed.subscriptionRiskAutoSuspend === "true",
+    subscriptionRiskEnabled: optionalBoolean(
+      parsed.subscriptionRiskEnabled,
+      current.subscriptionRiskEnabled,
+    ),
+    subscriptionRiskAutoSuspend: optionalBoolean(
+      parsed.subscriptionRiskAutoSuspend,
+      current.subscriptionRiskAutoSuspend,
+    ),
     subscriptionRiskWindowHours:
       parsed.subscriptionRiskWindowHours ?? current.subscriptionRiskWindowHours,
     subscriptionRiskCityWarning:
@@ -131,7 +147,7 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
       parsed.subscriptionRiskIpLimitPerHour ?? current.subscriptionRiskIpLimitPerHour,
     subscriptionRiskTokenLimitPerHour:
       parsed.subscriptionRiskTokenLimitPerHour ?? current.subscriptionRiskTokenLimitPerHour,
-    inviteRewardEnabled: parsed.inviteRewardEnabled === "true",
+    inviteRewardEnabled: optionalBoolean(parsed.inviteRewardEnabled, current.inviteRewardEnabled),
     inviteRewardRate: parsed.inviteRewardRate ?? Number(current.inviteRewardRate),
     inviteRewardCouponId: parsed.inviteRewardCouponId || null,
     turnstileSiteKey: parsed.turnstileSiteKey || null,
@@ -139,7 +155,7 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
     smtpEnabled,
     smtpHost: parsed.smtpHost || null,
     smtpPort: parsed.smtpPort ?? current.smtpPort,
-    smtpSecure: parsed.smtpSecure === "true",
+    smtpSecure: optionalBoolean(parsed.smtpSecure, current.smtpSecure),
     smtpUser: parsed.smtpUser || null,
     smtpPassword,
     smtpFromName: parsed.smtpFromName || null,

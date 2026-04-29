@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Clock3, Gift, LifeBuoy, Mail, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Bell, ChevronDown, Clock3, Gift, LifeBuoy, Mail, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +63,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
+  const [riskSettingsOpen, setRiskSettingsOpen] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -235,140 +236,160 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
       </section>
 
       <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <ShieldAlert className="size-4 text-primary" /> 订阅访问风控
-        </div>
-        <p className="text-xs leading-5 text-muted-foreground">
-          控制订阅接口限流、跨地区访问告警和自动暂停。关闭总控后仍会保留访问日志，但不会限流、告警或自动暂停。
-        </p>
-        <div className="grid gap-5 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskEnabled">风控总控</Label>
-            <select
-              id="subscriptionRiskEnabled"
-              name="subscriptionRiskEnabled"
-              defaultValue={String(config.subscriptionRiskEnabled)}
-              className={selectClassName}
-            >
-              <option value="true">开启</option>
-              <option value="false">关闭</option>
-            </select>
+        <button
+          type="button"
+          aria-expanded={riskSettingsOpen}
+          aria-controls="subscription-risk-settings"
+          onClick={() => setRiskSettingsOpen((open) => !open)}
+          className="flex w-full items-center justify-between gap-4 rounded-md text-left outline-none transition-colors hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/15"
+        >
+          <span className="flex min-w-0 items-start gap-2">
+            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-primary" />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">订阅访问风控</span>
+              <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                控制订阅接口限流、跨地区访问告警和自动暂停，当前{config.subscriptionRiskEnabled ? "已开启" : "已关闭"}。
+              </span>
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
+            {riskSettingsOpen ? "收起" : "展开"}
+            <ChevronDown className={`size-4 transition-transform ${riskSettingsOpen ? "rotate-180" : ""}`} />
+          </span>
+        </button>
+
+        {riskSettingsOpen && (
+          <div id="subscription-risk-settings" className="space-y-4">
+            <div className="grid gap-5 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskEnabled">风控总控</Label>
+                <select
+                  id="subscriptionRiskEnabled"
+                  name="subscriptionRiskEnabled"
+                  defaultValue={String(config.subscriptionRiskEnabled)}
+                  className={selectClassName}
+                >
+                  <option value="true">开启</option>
+                  <option value="false">关闭</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskAutoSuspend">自动暂停</Label>
+                <select
+                  id="subscriptionRiskAutoSuspend"
+                  name="subscriptionRiskAutoSuspend"
+                  defaultValue={String(config.subscriptionRiskAutoSuspend)}
+                  className={selectClassName}
+                >
+                  <option value="true">开启，达到暂停阈值自动封停</option>
+                  <option value="false">关闭，只记录警告</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskWindowHours">统计窗口（小时）</Label>
+                <Input
+                  id="subscriptionRiskWindowHours"
+                  name="subscriptionRiskWindowHours"
+                  type="number"
+                  min={1}
+                  max={168}
+                  defaultValue={config.subscriptionRiskWindowHours}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskCityWarning">城市警告阈值</Label>
+                <Input
+                  id="subscriptionRiskCityWarning"
+                  name="subscriptionRiskCityWarning"
+                  type="number"
+                  min={2}
+                  max={100}
+                  defaultValue={config.subscriptionRiskCityWarning}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskCitySuspend">城市暂停阈值</Label>
+                <Input
+                  id="subscriptionRiskCitySuspend"
+                  name="subscriptionRiskCitySuspend"
+                  type="number"
+                  min={2}
+                  max={100}
+                  defaultValue={config.subscriptionRiskCitySuspend}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskRegionWarning">省/地区警告阈值</Label>
+                <Input
+                  id="subscriptionRiskRegionWarning"
+                  name="subscriptionRiskRegionWarning"
+                  type="number"
+                  min={2}
+                  max={100}
+                  defaultValue={config.subscriptionRiskRegionWarning}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskRegionSuspend">省/地区暂停阈值</Label>
+                <Input
+                  id="subscriptionRiskRegionSuspend"
+                  name="subscriptionRiskRegionSuspend"
+                  type="number"
+                  min={2}
+                  max={100}
+                  defaultValue={config.subscriptionRiskRegionSuspend}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskCountryWarning">国家警告阈值</Label>
+                <Input
+                  id="subscriptionRiskCountryWarning"
+                  name="subscriptionRiskCountryWarning"
+                  type="number"
+                  min={2}
+                  max={100}
+                  defaultValue={config.subscriptionRiskCountryWarning}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskCountrySuspend">国家暂停阈值</Label>
+                <Input
+                  id="subscriptionRiskCountrySuspend"
+                  name="subscriptionRiskCountrySuspend"
+                  type="number"
+                  min={2}
+                  max={100}
+                  defaultValue={config.subscriptionRiskCountrySuspend}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskIpLimitPerHour">IP 限流（次/小时）</Label>
+                <Input
+                  id="subscriptionRiskIpLimitPerHour"
+                  name="subscriptionRiskIpLimitPerHour"
+                  type="number"
+                  min={1}
+                  max={100000}
+                  defaultValue={config.subscriptionRiskIpLimitPerHour}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subscriptionRiskTokenLimitPerHour">订阅限流（次/小时）</Label>
+                <Input
+                  id="subscriptionRiskTokenLimitPerHour"
+                  name="subscriptionRiskTokenLimitPerHour"
+                  type="number"
+                  min={1}
+                  max={100000}
+                  defaultValue={config.subscriptionRiskTokenLimitPerHour}
+                />
+              </div>
+            </div>
+            <p className="text-xs leading-5 text-muted-foreground">
+              默认值对应原规则：24 小时内 4 城市警告、5 城市暂停；2 省/地区警告、3 省/地区暂停；2 国家警告、3 国家暂停；IP 180 次/小时，订阅 60 次/小时。
+            </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskAutoSuspend">自动暂停</Label>
-            <select
-              id="subscriptionRiskAutoSuspend"
-              name="subscriptionRiskAutoSuspend"
-              defaultValue={String(config.subscriptionRiskAutoSuspend)}
-              className={selectClassName}
-            >
-              <option value="true">开启，达到暂停阈值自动封停</option>
-              <option value="false">关闭，只记录警告</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskWindowHours">统计窗口（小时）</Label>
-            <Input
-              id="subscriptionRiskWindowHours"
-              name="subscriptionRiskWindowHours"
-              type="number"
-              min={1}
-              max={168}
-              defaultValue={config.subscriptionRiskWindowHours}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskCityWarning">城市警告阈值</Label>
-            <Input
-              id="subscriptionRiskCityWarning"
-              name="subscriptionRiskCityWarning"
-              type="number"
-              min={2}
-              max={100}
-              defaultValue={config.subscriptionRiskCityWarning}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskCitySuspend">城市暂停阈值</Label>
-            <Input
-              id="subscriptionRiskCitySuspend"
-              name="subscriptionRiskCitySuspend"
-              type="number"
-              min={2}
-              max={100}
-              defaultValue={config.subscriptionRiskCitySuspend}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskRegionWarning">省/地区警告阈值</Label>
-            <Input
-              id="subscriptionRiskRegionWarning"
-              name="subscriptionRiskRegionWarning"
-              type="number"
-              min={2}
-              max={100}
-              defaultValue={config.subscriptionRiskRegionWarning}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskRegionSuspend">省/地区暂停阈值</Label>
-            <Input
-              id="subscriptionRiskRegionSuspend"
-              name="subscriptionRiskRegionSuspend"
-              type="number"
-              min={2}
-              max={100}
-              defaultValue={config.subscriptionRiskRegionSuspend}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskCountryWarning">国家警告阈值</Label>
-            <Input
-              id="subscriptionRiskCountryWarning"
-              name="subscriptionRiskCountryWarning"
-              type="number"
-              min={2}
-              max={100}
-              defaultValue={config.subscriptionRiskCountryWarning}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskCountrySuspend">国家暂停阈值</Label>
-            <Input
-              id="subscriptionRiskCountrySuspend"
-              name="subscriptionRiskCountrySuspend"
-              type="number"
-              min={2}
-              max={100}
-              defaultValue={config.subscriptionRiskCountrySuspend}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskIpLimitPerHour">IP 限流（次/小时）</Label>
-            <Input
-              id="subscriptionRiskIpLimitPerHour"
-              name="subscriptionRiskIpLimitPerHour"
-              type="number"
-              min={1}
-              max={100000}
-              defaultValue={config.subscriptionRiskIpLimitPerHour}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionRiskTokenLimitPerHour">订阅限流（次/小时）</Label>
-            <Input
-              id="subscriptionRiskTokenLimitPerHour"
-              name="subscriptionRiskTokenLimitPerHour"
-              type="number"
-              min={1}
-              max={100000}
-              defaultValue={config.subscriptionRiskTokenLimitPerHour}
-            />
-          </div>
-        </div>
-        <p className="text-xs leading-5 text-muted-foreground">
-          默认值对应原规则：24 小时内 4 城市警告、5 城市暂停；2 省/地区警告、3 省/地区暂停；2 国家警告、3 国家暂停；IP 180 次/小时，订阅 60 次/小时。
-        </p>
+        )}
       </section>
 
       <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
