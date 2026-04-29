@@ -2,7 +2,7 @@
 set -euo pipefail
 
 GH_REPO="${GH_REPO:-JetSprow/J-Board}"
-BRANCH="${BRANCH:-main}"
+BRANCH="${BRANCH:-lite}"
 APP_DIR="${APP_DIR:-}"
 REWRITE_ENV="${REWRITE_ENV:-}"
 SKIP_DOCKER_INSTALL="${SKIP_DOCKER_INSTALL:-0}"
@@ -228,6 +228,16 @@ git_in_repo() {
   fi
 }
 
+load_resource_helpers() {
+  local helper="$APP_DIR/scripts/lib-resource-profile.sh"
+  if [ -f "$helper" ]; then
+    # shellcheck disable=SC1090
+    . "$helper"
+  else
+    echo "未找到资源检测脚本：$helper，将使用 Docker 默认构建策略。"
+  fi
+}
+
 prepare_repo() {
   section "准备 J-Board 代码"
 
@@ -345,12 +355,37 @@ configure_env() {
 }
 
 docker_compose() {
-  run_as_root docker compose "$@"
+  local env_args=()
+  if [ -n "${COMPOSE_PARALLEL_LIMIT:-}" ]; then
+    env_args+=("COMPOSE_PARALLEL_LIMIT=$COMPOSE_PARALLEL_LIMIT")
+  fi
+
+  if [ "$(id -u)" -eq 0 ]; then
+    env "${env_args[@]}" docker compose "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo env "${env_args[@]}" docker compose "$@"
+  else
+    echo "需要 root 权限。请使用 root 用户运行，或先安装 sudo。" >&2
+    exit 1
+  fi
 }
 
 start_panel() {
   section "构建并启动面板"
-  docker_compose build init app
+
+  if command -v jboard_prepare_docker_build_env >/dev/null 2>&1; then
+    jboard_prepare_docker_build_env
+    jboard_print_build_profile
+    if jboard_is_low_resource_build; then
+      docker_compose build "${JBOARD_DOCKER_BUILD_ARGS[@]}" init
+      docker_compose build "${JBOARD_DOCKER_BUILD_ARGS[@]}" app
+    else
+      docker_compose build "${JBOARD_DOCKER_BUILD_ARGS[@]}" init app
+    fi
+  else
+    docker_compose build init app
+  fi
+
   docker_compose --profile setup run --rm init
   docker_compose up -d app
 }
@@ -425,6 +460,7 @@ main() {
 
   install_base_packages
   prepare_repo
+  load_resource_helpers
   configure_env
   install_docker
   start_panel

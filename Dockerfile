@@ -3,17 +3,20 @@ FROM node:20-alpine AS base
 # --- deps: install production + dev dependencies ---
 FROM base AS deps
 WORKDIR /app
+ARG NPM_CONFIG_JOBS=""
+ENV npm_config_jobs=${NPM_CONFIG_JOBS}
 RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 # --- builder: generate Prisma client & build Next.js ---
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NEXT_BUILD_NODE_OPTIONS=""
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS=--max-old-space-size=2048
+ENV NODE_OPTIONS=${NEXT_BUILD_NODE_OPTIONS}
 RUN npx prisma generate
 RUN npm run build
 

@@ -128,8 +128,10 @@ SMTP 邮件服务、注册邮箱验证开关、支付方式、3x-ui 节点等业
 适合全新 Linux 服务器。脚本会安装基础依赖、安装 Docker 与 Compose 插件、拉取代码、生成 `.env`、初始化数据库并启动面板。
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/main/scripts/install-jboard-panel.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/lite/scripts/install-jboard-panel.sh)
 ```
+
+安装和更新脚本会自动检测 CPU、宿主机内存、Docker 可用内存和 Docker 数据盘空间。常规机器使用 Docker 默认构建策略；1C、低于 2GB 内存或 Docker 可用空间低于 8GB 的小机器会自动进入低资源模式，降低 Compose 并发、npm 编译并发和 Next 构建堆内存，并把镜像分步构建，构建会更慢但峰值占用更低。
 
 脚本会交互询问：
 
@@ -146,7 +148,20 @@ bash <(curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/main/script
 也可以通过环境变量覆盖默认行为：
 
 ```bash
-APP_DIR=/opt/jboard GH_REPO=JetSprow/J-Board BRANCH=main bash <(curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/main/scripts/install-jboard-panel.sh)
+APP_DIR=/opt/jboard GH_REPO=JetSprow/J-Board BRANCH=lite bash <(curl -fsSL https://raw.githubusercontent.com/JetSprow/J-Board/lite/scripts/install-jboard-panel.sh)
+```
+
+构建资源策略也可以手动覆盖：
+
+```bash
+# 自动判断，默认值
+JBOARD_BUILD_PROFILE=auto ./scripts/upgrade-jboard-panel.sh
+
+# 强制低资源慢速构建
+JBOARD_BUILD_PROFILE=low ./scripts/upgrade-jboard-panel.sh
+
+# 强制常规构建，不额外限制并发或 Node heap
+JBOARD_BUILD_PROFILE=normal ./scripts/upgrade-jboard-panel.sh
 ```
 
 脚本完成后会输出：
@@ -187,6 +202,8 @@ docker compose up -d app
 ```bash
 ./scripts/upgrade-jboard-panel.sh
 ```
+
+更新脚本同样会自动判断机器配置，并在更新前备份 SQLite 数据库到 `backups/`。
 
 常用排障：
 
@@ -384,17 +401,17 @@ Cloudflare 场景建议在 Rules -> Settings -> Managed Transforms 开启 Add vi
 
 ## 备份与恢复
 
-下载 SQL 备份：
+下载 SQLite 备份：
 
 ```bash
-docker compose exec -T db pg_dump -U jboard jboard > backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose exec -T app sh -lc 'cd /app/storage && set -- jboard.db; [ -f jboard.db-wal ] && set -- "$@" jboard.db-wal; [ -f jboard.db-shm ] && set -- "$@" jboard.db-shm; tar -czf - "$@"' > backup_$(date +%Y%m%d_%H%M%S).tar.gz
 ```
 
 后台也可通过 `/admin/backups` 导出或恢复数据库。恢复前务必先保存当前数据库备份。
 
 建议：
 
-- 定期备份 PostgreSQL volume。
+- 定期备份 SQLite volume 或通过后台导出数据库。
 - 将备份加密保存。
 - 备份恢复后立即检查管理员登录、支付配置、节点密码、SMTP、订阅 URL 和 Agent 上报。
 
