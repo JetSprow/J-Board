@@ -12,6 +12,7 @@ export async function getAccountPageData(userId: string): Promise<{
       where: { id: userId },
       select: {
         email: true,
+        emailVerifiedAt: true,
         name: true,
         inviteCode: true,
         createdAt: true,
@@ -33,6 +34,7 @@ export async function getAccountPageData(userId: string): Promise<{
   return {
     user: {
       email: user.email,
+      emailVerifiedAt: user.emailVerifiedAt ? formatDate(user.emailVerifiedAt) : null,
       name: user.name,
       inviteCode: user.inviteCode,
       createdAt: formatDate(user.createdAt),

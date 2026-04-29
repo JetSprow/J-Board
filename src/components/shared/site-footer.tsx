@@ -1,5 +1,6 @@
 import { GitFork } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./theme-toggle";
 
 const GITHUB_URL = "https://github.com/JetSprow/J-Board";
 
@@ -12,6 +13,8 @@ export function SiteFooter({ className }: { className?: string }) {
       )}
     >
       <span>J-Board</span>
+      <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
+      <ThemeToggle className="size-7 rounded-md border-transparent bg-transparent" />
       <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
       <a
         href={GITHUB_URL}

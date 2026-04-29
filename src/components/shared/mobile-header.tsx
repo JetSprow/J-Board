@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import { MobileDrawer } from "./mobile-drawer";
 import { Sidebar, type SidebarGroup, type SidebarLink } from "./sidebar";
+import { ThemeToggle } from "./theme-toggle";
 
 interface MobileHeaderProps {
   title: string;
@@ -26,6 +27,7 @@ export function MobileHeader({ title, subtitle, links, groups, matchMode, collap
           <span className="text-sm font-semibold">{title}</span>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle className="border-sidebar-border bg-sidebar-accent/35 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />
           {actions}
           <button
             onClick={() => setOpen(true)}

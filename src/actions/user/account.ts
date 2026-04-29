@@ -2,9 +2,11 @@
 
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { normalizeEmailAddress, sendEmailChangeConfirmation } from "@/services/email";
 import { requireAuth } from "@/lib/require-auth";
 
 const profileSchema = z.object({
@@ -15,6 +17,10 @@ const passwordSchema = z.object({
   currentPassword: z.string().min(6, "当前密码不能为空"),
   newPassword: z.string().min(6, "新密码至少 6 位"),
   confirmPassword: z.string().min(6, "确认密码至少 6 位"),
+});
+
+const emailChangeSchema = z.object({
+  email: z.string().trim().email("请输入正确的新邮箱"),
 });
 
 async function generateUniqueInviteCode(): Promise<string> {
@@ -42,6 +48,35 @@ export async function updateAccountProfile(formData: FormData) {
   });
 
   revalidatePath("/account");
+}
+
+export async function requestAccountEmailChange(formData: FormData) {
+  const session = await requireAuth();
+  const data = emailChangeSchema.parse(Object.fromEntries(formData));
+  const email = normalizeEmailAddress(data.email);
+
+  const current = await prisma.user.findUniqueOrThrow({
+    where: { id: session.user.id },
+    select: { email: true },
+  });
+  if (current.email === email) {
+    throw new Error("新邮箱不能与当前邮箱相同");
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  if (existing) {
+    throw new Error("这个邮箱已经被其他账户使用");
+  }
+
+  const headerList = await headers();
+  await sendEmailChangeConfirmation({
+    userId: session.user.id,
+    email,
+    headers: headerList,
+  });
 }
 
 export async function changeAccountPassword(formData: FormData) {

@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   changeAccountPassword,
   generateInviteCode,
+  requestAccountEmailChange,
   updateAccountProfile,
 } from "@/actions/user/account";
 import { getErrorMessage } from "@/lib/errors";
@@ -22,6 +23,7 @@ export function AccountPanel({ user }: Props) {
   const router = useRouter();
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [emailSaving, setEmailSaving] = useState(false);
   const [inviteCode, setInviteCode] = useState(user.inviteCode);
   const [inviteLoading, setInviteLoading] = useState(false);
 
@@ -35,6 +37,19 @@ export function AccountPanel({ user }: Props) {
       toast.error(getErrorMessage(error, "更新资料失败"));
     } finally {
       setProfileSaving(false);
+    }
+  }
+
+  async function handleEmailSubmit(formData: FormData) {
+    setEmailSaving(true);
+    try {
+      await requestAccountEmailChange(formData);
+      toast.success("确认邮件已发送，请查收新邮箱");
+      (document.getElementById("account-email-form") as HTMLFormElement | null)?.reset();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "发送确认邮件失败"));
+    } finally {
+      setEmailSaving(false);
     }
   }
 
@@ -71,7 +86,9 @@ export function AccountPanel({ user }: Props) {
         <AccountProfileCard
           user={user}
           isSaving={profileSaving}
+          isEmailSaving={emailSaving}
           onSubmit={handleProfileSubmit}
+          onEmailSubmit={handleEmailSubmit}
         />
         <AccountPasswordCard email={user.email} isSaving={passwordSaving} onSubmit={handlePasswordSubmit} />
       </div>

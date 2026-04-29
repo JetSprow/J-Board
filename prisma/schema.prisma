@@ -17,6 +17,12 @@ enum UserStatus {
   BANNED
 }
 
+enum EmailTokenPurpose {
+  REGISTRATION_VERIFY
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
 enum SubscriptionType {
   STREAMING
   PROXY
@@ -125,16 +131,17 @@ enum SupportTicketPriority {
 }
 
 model User {
-  id          String     @id @default(cuid())
-  email       String     @unique
-  password    String
-  name        String?
-  role        Role       @default(USER)
-  status      UserStatus @default(ACTIVE)
-  inviteCode  String?    @unique
-  invitedById String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  email           String     @unique
+  emailVerifiedAt DateTime?  @default(now())
+  password        String
+  name            String?
+  role            Role       @default(USER)
+  status          UserStatus @default(ACTIVE)
+  inviteCode      String?    @unique
+  invitedById     String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   subscriptions         UserSubscription[]
   orders                Order[]
@@ -153,6 +160,24 @@ model User {
   taskRuns              TaskRun[]            @relation("TaskTriggeredBy")
   supportTickets        SupportTicket[]
   supportReplies        SupportTicketReply[]
+  emailTokens           EmailToken[]
+}
+
+model EmailToken {
+  id         String            @id @default(cuid())
+  userId     String?
+  email      String
+  tokenHash  String            @unique
+  purpose    EmailTokenPurpose
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime          @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, purpose, createdAt])
+  @@index([userId, purpose, createdAt])
+  @@index([expiresAt])
 }
 
 model SubscriptionCategory {
@@ -284,16 +309,16 @@ model StreamingSlot {
 }
 
 model NodeServer {
-  id             String    @id @default(cuid())
-  name           String
+  id            String   @id @default(cuid())
+  name          String
   panelUrl      String?
   panelUsername String?
   panelPassword String?
-  panelType     String    @default("3x-ui")
-  agentToken     String?
-  status         String    @default("active")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  panelType     String   @default("3x-ui")
+  agentToken    String?
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   inbounds    NodeInbound[]
   plans       SubscriptionPlan[]
@@ -630,6 +655,7 @@ model AppConfig {
   siteName                        String   @default("J-Board")
   siteUrl                         String?
   allowRegistration               Boolean  @default(true)
+  emailVerificationRequired       Boolean  @default(false)
   requireInviteCode               Boolean  @default(false)
   supportContact                  String?
   maintenanceNotice               String?
@@ -643,6 +669,14 @@ model AppConfig {
   inviteRewardEnabled             Boolean  @default(false)
   turnstileSiteKey                String?
   turnstileSecretKey              String?
+  smtpEnabled                     Boolean  @default(false)
+  smtpHost                        String?
+  smtpPort                        Int      @default(587)
+  smtpSecure                      Boolean  @default(false)
+  smtpUser                        String?
+  smtpPassword                    String?
+  smtpFromName                    String?
+  smtpFromEmail                   String?
   createdAt                       DateTime @default(now())
   updatedAt                       DateTime @updatedAt
 }

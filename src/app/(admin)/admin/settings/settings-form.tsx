@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Clock3, Gift, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Bell, Clock3, Gift, Mail, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { saveAppSettings } from "@/actions/admin/settings";
+import { saveAppSettings, sendSmtpTestMessage } from "@/actions/admin/settings";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -17,6 +17,7 @@ interface AppConfig {
   maintenanceNotice: string | null;
   siteNotice: string | null;
   allowRegistration: boolean;
+  emailVerificationRequired: boolean;
   requireInviteCode: boolean;
   autoReminderDispatchEnabled: boolean;
   reminderDispatchIntervalMinutes: number;
@@ -27,6 +28,13 @@ interface AppConfig {
   inviteRewardCouponId: string | null;
   turnstileSiteKey: string | null;
   turnstileSecretKey: string | null;
+  smtpEnabled: boolean;
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string | null;
+  smtpFromName: string | null;
+  smtpFromEmail: string | null;
 }
 
 interface CouponOption {
@@ -39,6 +47,7 @@ const selectClassName = "premium-input w-full appearance-none px-3.5 py-2 text-s
 
 export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: CouponOption[] }) {
   const [saving, setSaving] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setSaving(true);
@@ -52,8 +61,23 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
     }
   }
 
+  async function handleTestEmail() {
+    const form = document.getElementById("app-settings-form") as HTMLFormElement | null;
+    if (!form) return;
+
+    setTestingEmail(true);
+    try {
+      await sendSmtpTestMessage(new FormData(form));
+      toast.success("测试邮件已发送");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "测试邮件发送失败"));
+    } finally {
+      setTestingEmail(false);
+    }
+  }
+
   return (
-    <form action={handleSubmit} className="form-panel space-y-6">
+    <form id="app-settings-form" action={handleSubmit} className="form-panel space-y-6">
       <div className="flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
           <Settings2 className="size-5" />
@@ -163,9 +187,80 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
               <option value="true">是</option>
             </select>
           </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="emailVerificationRequired">注册邮箱验证</Label>
+            <select
+              id="emailVerificationRequired"
+              name="emailVerificationRequired"
+              defaultValue={String(config.emailVerificationRequired)}
+              className={selectClassName}
+            >
+              <option value="false">关闭</option>
+              <option value="true">开启，注册后必须验证邮箱</option>
+            </select>
+            <p className="text-xs leading-5 text-muted-foreground">开启后，新用户注册会先收到验证邮件，完成验证后才能登录。</p>
+          </div>
         </div>
       </section>
 
+      <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Mail className="size-4 text-primary" /> SMTP 邮件服务
+        </div>
+        <p className="text-xs leading-5 text-muted-foreground">
+          用于注册邮箱验证、忘记密码和账户邮箱变更。密码留空会保留当前配置；测试邮件会使用已保存的配置。
+        </p>
+        <div className="grid gap-5 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="smtpEnabled">邮件服务</Label>
+            <select id="smtpEnabled" name="smtpEnabled" defaultValue={String(config.smtpEnabled)} className={selectClassName}>
+              <option value="false">关闭</option>
+              <option value="true">开启</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpHost">SMTP 主机</Label>
+            <Input id="smtpHost" name="smtpHost" defaultValue={config.smtpHost ?? ""} placeholder="smtp.example.com" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpPort">SMTP 端口</Label>
+            <Input id="smtpPort" name="smtpPort" type="number" min={1} max={65535} defaultValue={config.smtpPort} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpSecure">TLS / SSL</Label>
+            <select id="smtpSecure" name="smtpSecure" defaultValue={String(config.smtpSecure)} className={selectClassName}>
+              <option value="false">STARTTLS / 普通连接</option>
+              <option value="true">SSL 直连</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpUser">SMTP 用户名</Label>
+            <Input id="smtpUser" name="smtpUser" defaultValue={config.smtpUser ?? ""} autoComplete="username" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpPassword">SMTP 密码</Label>
+            <Input id="smtpPassword" name="smtpPassword" type="password" placeholder="留空保持不变" autoComplete="new-password" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpFromName">发件名称</Label>
+            <Input id="smtpFromName" name="smtpFromName" defaultValue={config.smtpFromName ?? ""} placeholder={config.siteName} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpFromEmail">发件邮箱</Label>
+            <Input id="smtpFromEmail" name="smtpFromEmail" type="email" defaultValue={config.smtpFromEmail ?? ""} placeholder="noreply@example.com" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="smtpTestEmail">测试收件邮箱</Label>
+            <div className="flex gap-2">
+              <Input id="smtpTestEmail" name="smtpTestEmail" type="email" placeholder="you@example.com" />
+              <Button type="button" variant="outline" onClick={handleTestEmail} disabled={testingEmail}>
+                <Send className="size-4" />
+                {testingEmail ? "发送中" : "测试"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
         <div className="flex items-center gap-2 text-sm font-semibold">

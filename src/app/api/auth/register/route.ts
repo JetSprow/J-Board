@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getAppConfig } from "@/services/app-config";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { rateLimit } from "@/lib/rate-limit";
+import { normalizeEmailAddress, sendRegistrationVerificationEmail } from "@/services/email";
 
 const schema = z.object({
   email: z.string().email(),
@@ -38,7 +39,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "参数错误" }, { status: 400 });
   }
 
-  const { email, password, name, inviteCode, turnstileToken } = parsed.data;
+  const { password, name, inviteCode, turnstileToken } = parsed.data;
+  const email = normalizeEmailAddress(parsed.data.email);
   const config = await getAppConfig();
 
   if (config.turnstileSecretKey) {
@@ -69,14 +71,33 @@ export async function POST(req: Request) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email,
+      emailVerifiedAt: config.emailVerificationRequired ? null : new Date(),
       password: hashedPassword,
       name: name || null,
       invitedById: inviterId,
     },
+    select: { id: true, email: true },
   });
 
-  return NextResponse.json({ ok: true });
+  if (config.emailVerificationRequired) {
+    try {
+      await sendRegistrationVerificationEmail({
+        userId: user.id,
+        email: user.email,
+        headers: req.headers,
+        requestUrl: req.url,
+      });
+    } catch (error) {
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => null);
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "验证邮件发送失败" },
+        { status: 500 },
+      );
+    }
+  }
+
+  return NextResponse.json({ ok: true, requiresEmailVerification: config.emailVerificationRequired });
 }

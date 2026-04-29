@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
+import { ThemeToggle } from "./theme-toggle";
 
 export interface SidebarLink {
   href: string;
@@ -96,6 +97,7 @@ export function Sidebar({
               )}
             </div>
           )}
+          {!shouldCollapseRail && <ThemeToggle className="border-sidebar-border bg-sidebar-accent/35 text-sidebar-foreground/62 hover:bg-sidebar-accent hover:text-sidebar-foreground" />}
           {!shouldCollapseRail && headerAction}
           {railCollapsible && (
             <button
@@ -197,7 +199,8 @@ export function Sidebar({
           </div>
         ))}
       </nav>
-      <div className={cn("border-t border-sidebar-border py-3", shouldCollapseRail ? "px-2" : "px-3")}>
+      <div className={cn("space-y-2 border-t border-sidebar-border py-3", shouldCollapseRail ? "px-2" : "px-3")}>
+        {shouldCollapseRail && <ThemeToggle className="w-full border-sidebar-border bg-sidebar-accent/35 text-sidebar-foreground/62 hover:bg-sidebar-accent hover:text-sidebar-foreground" />}
         <button
           type="button"
           onClick={handleSignOut}

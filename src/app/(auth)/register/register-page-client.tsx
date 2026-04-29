@@ -13,6 +13,7 @@ export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [requiresEmailVerification, setRequiresEmailVerification] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -47,6 +48,7 @@ export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
       if (!response.ok) {
         setError(data.error || "注册失败");
       } else {
+        setRequiresEmailVerification(Boolean(data.requiresEmailVerification));
         setSuccess(true);
       }
     } finally {
@@ -60,10 +62,12 @@ export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
         <AuthCard>
           <div className="space-y-4 py-3 text-center">
             <div className="text-4xl" aria-hidden="true">🎉</div>
-            <h1 className="text-xl font-semibold tracking-tight">注册成功</h1>
-            <p className="text-sm text-muted-foreground">账户已创建，请登录。</p>
-            <Link href="/login" className={buttonVariants({ size: "lg", className: "w-full" })}>
-              去登录
+            <h1 className="text-xl font-semibold tracking-tight">{requiresEmailVerification ? "验证邮件已发送" : "注册成功"}</h1>
+            <p className="text-sm leading-6 text-muted-foreground">
+              {requiresEmailVerification ? "请查收邮箱并完成验证，验证后即可登录。" : "账户已创建，请登录。"}
+            </p>
+            <Link href={requiresEmailVerification ? "/verify-email-request" : "/login"} className={buttonVariants({ size: "lg", className: "w-full" })}>
+              {requiresEmailVerification ? "没有收到？重新发送" : "去登录"}
             </Link>
           </div>
         </AuthCard>

@@ -29,6 +29,7 @@ export default async function AdminSettingsPage() {
           maintenanceNotice: config.maintenanceNotice,
           siteNotice: config.siteNotice,
           allowRegistration: config.allowRegistration,
+          emailVerificationRequired: config.emailVerificationRequired,
           requireInviteCode: config.requireInviteCode,
           autoReminderDispatchEnabled: config.autoReminderDispatchEnabled,
           reminderDispatchIntervalMinutes: config.reminderDispatchIntervalMinutes,
@@ -39,6 +40,13 @@ export default async function AdminSettingsPage() {
           inviteRewardCouponId: config.inviteRewardCouponId,
           turnstileSiteKey: config.turnstileSiteKey,
           turnstileSecretKey: config.turnstileSecretKey,
+          smtpEnabled: config.smtpEnabled,
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpSecure: config.smtpSecure,
+          smtpUser: config.smtpUser,
+          smtpFromName: config.smtpFromName,
+          smtpFromEmail: config.smtpFromEmail,
         }}
         coupons={coupons}
       />

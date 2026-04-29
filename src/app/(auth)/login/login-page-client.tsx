@@ -34,7 +34,7 @@ export function LoginPageClient({ siteKey }: { siteKey?: string | null }) {
     });
     setLoading(false);
     if (result?.error) {
-      setError("邮箱或密码错误");
+      setError(result.error === "EMAIL_NOT_VERIFIED" ? "邮箱尚未验证，请先查收验证邮件" : "邮箱或密码错误");
     } else {
       router.push("/");
       router.refresh();
@@ -59,12 +59,26 @@ export function LoginPageClient({ siteKey }: { siteKey?: string | null }) {
             {loading ? "登录中..." : "登录"}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          没有账户？{" "}
-          <Link href="/register" className="font-medium text-primary hover:underline">
-            注册
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+          <Link href="/forgot-password" className="font-medium text-primary hover:underline">
+            忘记密码
           </Link>
-        </p>
+          <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
+          <span>
+            没有账户？{" "}
+            <Link href="/register" className="font-medium text-primary hover:underline">
+              注册
+            </Link>
+          </span>
+          {error === "邮箱尚未验证，请先查收验证邮件" && (
+            <>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
+              <Link href="/verify-email-request" className="font-medium text-primary hover:underline">
+                重发验证邮件
+              </Link>
+            </>
+          )}
+        </div>
       </AuthCard>
     </AuthShell>
   );
