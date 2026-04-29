@@ -12,7 +12,7 @@ import (
 	"github.com/jboard/jboard-agent/internal/probe"
 )
 
-const version = "3.0.1"
+const version = "3.0.2"
 
 func main() {
 	debug.SetGCPercent(50)

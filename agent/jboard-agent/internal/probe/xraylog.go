@@ -20,7 +20,7 @@ import (
 const maxXrayReadBytes int64 = 2 * 1024 * 1024
 const maxXrayEventsPerPush = 300
 
-var xrayAccessLinePattern = regexp.MustCompile(`^(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})\s+(\S+)\s+(accepted|rejected)\s+(?:(tcp|udp):)?(\S+)\s+\[([^\]]+)\](?:.*?\bemail:\s*([^\s]+))?`)
+var xrayAccessLinePattern = regexp.MustCompile(`^(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(?:from\s+)?(\S+)\s+(accepted|rejected)\s+(?:(tcp|udp):)?(\S+)\s+\[([^\]]+)\](?:.*?\bemail:\s*([^\s]+))?`)
 
 type xrayLogState struct {
 	Path   string `json:"path"`

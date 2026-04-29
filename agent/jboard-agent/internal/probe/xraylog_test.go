@@ -44,6 +44,37 @@ func TestParseXrayAccessLineWithIPv6Source(t *testing.T) {
 	}
 }
 
+func TestParseXrayAccessLineWithFromAndFractionalTimestamp(t *testing.T) {
+	line := "2026/04/29 09:20:06.006542 from tcp:220.240.111.193:59433 accepted udp:71.18.167.208:443 [inbound-17583 >> direct] email: user@test.com-cmojtnp3"
+	got, ok := parseXrayAccessLine(line)
+	if !ok {
+		t.Fatal("parseXrayAccessLine() failed")
+	}
+	if got.SourceIP != "220.240.111.193" {
+		t.Fatalf("SourceIP = %q", got.SourceIP)
+	}
+	if got.ClientEmail != "user@test.com-cmojtnp3" {
+		t.Fatalf("ClientEmail = %q", got.ClientEmail)
+	}
+	if got.InboundTag != "inbound-17583" {
+		t.Fatalf("InboundTag = %q", got.InboundTag)
+	}
+	if got.Network != "udp" || got.TargetHost != "71.18.167.208" || got.TargetPort != 443 {
+		t.Fatalf("target = %s %s:%d", got.Network, got.TargetHost, got.TargetPort)
+	}
+}
+
+func TestParseXrayAccessLineWithFromPlainSource(t *testing.T) {
+	line := "2026/04/29 09:20:05.982584 from 220.240.111.193:59425 accepted tcp:webcast3-core-c-lf.amemv.com:443 [inbound-17583 >> direct] email: user@test.com-cmojtnp3"
+	got, ok := parseXrayAccessLine(line)
+	if !ok {
+		t.Fatal("parseXrayAccessLine() failed")
+	}
+	if got.SourceIP != "220.240.111.193" || got.Network != "tcp" || got.TargetHost != "webcast3-core-c-lf.amemv.com" {
+		t.Fatalf("parsed = %+v", got)
+	}
+}
+
 func TestAggregateXrayAccessLines(t *testing.T) {
 	lines := []string{
 		"2026/04/29 10:11:12 203.0.113.9:51820 accepted tcp:example.com:443 [proxy] email: user@example.com-cabc1234",
