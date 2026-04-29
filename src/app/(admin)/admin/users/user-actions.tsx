@@ -63,7 +63,7 @@ export function UserActions({ user }: { user: User }) {
         size="sm"
         variant="destructive"
         title="删除这个用户？"
-        description="用户账号及相关数据会被清理。请确认已完成必要备份。"
+        description="仅无业务数据的空账号会被物理删除；有订单、订阅或工单的用户请改用禁用/封禁。"
         confirmLabel="删除用户"
         successMessage="用户已删除"
         errorMessage="删除失败"

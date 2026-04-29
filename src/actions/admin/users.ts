@@ -21,6 +21,23 @@ const updateUserSchema = z.object({
   role: z.enum(["ADMIN", "USER"]),
 });
 
+const userDeleteBlockerLabels: Record<string, string> = {
+  subscriptions: "订阅",
+  orders: "订单",
+  nodeClients: "节点客户端",
+  streamingSlots: "流媒体分配",
+  supportTickets: "工单",
+  inviteRewardLedgers: "邀请返利记录",
+  inviteeRewardLedgers: "被邀请返利记录",
+};
+
+function formatDeleteBlockers(counts: Record<string, number>) {
+  return Object.entries(counts)
+    .filter(([, count]) => count > 0)
+    .map(([key, count]) => `${userDeleteBlockerLabels[key] ?? key} ${count} 条`)
+    .join("、");
+}
+
 export async function createUser(formData: FormData) {
   const session = await requireAdmin();
   const data = createUserSchema.parse(Object.fromEntries(formData));
@@ -93,7 +110,55 @@ export async function updateUserStatus(id: string, status: "ACTIVE" | "DISABLED"
 
 export async function deleteUser(id: string) {
   const session = await requireAdmin();
-  const user = await prisma.user.delete({ where: { id } });
+  if (id === session.user.id) {
+    throw new Error("不能删除当前登录的管理员账号");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      _count: {
+        select: {
+          subscriptions: true,
+          orders: true,
+          nodeClients: true,
+          streamingSlots: true,
+          supportTickets: true,
+          inviteRewardLedgers: true,
+          inviteeRewardLedgers: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error("用户不存在，可能已经被删除");
+  }
+
+  if (user.role === "ADMIN") {
+    const adminCount = await prisma.user.count({
+      where: {
+        role: "ADMIN",
+        status: "ACTIVE",
+        id: { not: user.id },
+      },
+    });
+    if (adminCount === 0) {
+      throw new Error("不能删除最后一个可用管理员账号");
+    }
+  }
+
+  const blockers = formatDeleteBlockers(user._count);
+  if (blockers) {
+    throw new Error(
+      `无法直接删除该用户：存在 ${blockers}。为避免订单、订阅和客服记录丢失，请改用“禁用”或“封禁”；如确需彻底清理，请先人工处理关联数据。`,
+    );
+  }
+
+  await prisma.user.delete({ where: { id: user.id } });
   await recordAuditLog({
     actor: actorFromSession(session),
     action: "user.delete",
