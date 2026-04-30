@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface BooleanToggleProps {
+export interface BooleanToggleProps {
   id?: string;
   name?: string;
   value?: boolean;

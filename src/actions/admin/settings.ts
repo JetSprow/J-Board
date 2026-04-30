@@ -12,6 +12,24 @@ import { encrypt, isEncryptedValue } from "@/lib/crypto";
 import { getErrorMessage } from "@/lib/errors";
 import { sendSmtpTestEmail } from "@/services/email";
 
+const booleanSettingFields = [
+  "allowRegistration",
+  "emailVerificationRequired",
+  "requireInviteCode",
+  "autoReminderDispatchEnabled",
+  "trafficSyncEnabled",
+  "networkRecommendationsEnabled",
+  "networkInsightsEnabled",
+  "subscriptionRiskEnabled",
+  "subscriptionRiskAutoSuspend",
+  "nodeAccessRiskEnabled",
+  "inviteRewardEnabled",
+  "smtpEnabled",
+  "smtpSecure",
+] as const;
+
+export type BooleanSettingField = (typeof booleanSettingFields)[number];
+
 const settingsSchema = z.object({
   siteName: z.string().trim().min(1, "站点名称不能为空"),
   siteUrl: z.string().trim().optional(),
@@ -68,6 +86,11 @@ const smtpTestSettingsSchema = settingsSchema.extend({
   smtpTestEmail: smtpTestEmailSchema,
 });
 
+const booleanSettingSchema = z.object({
+  field: z.enum(booleanSettingFields),
+  value: z.boolean(),
+});
+
 type AdminSession = Awaited<ReturnType<typeof requireAdmin>>;
 type SettingsActionResult = { ok: true } | { ok: false; error: string };
 type SmtpTestActionResult =
@@ -96,6 +119,42 @@ async function assertSmtpTestRateLimit(userId: string) {
 
 function optionalBoolean(value: string | undefined, fallback: boolean) {
   return value == null ? fallback : value === "true";
+}
+
+function booleanSettingData(field: BooleanSettingField, value: boolean) {
+  return {
+    allowRegistration: { allowRegistration: value },
+    emailVerificationRequired: { emailVerificationRequired: value },
+    requireInviteCode: { requireInviteCode: value },
+    autoReminderDispatchEnabled: { autoReminderDispatchEnabled: value },
+    trafficSyncEnabled: { trafficSyncEnabled: value },
+    networkRecommendationsEnabled: { networkRecommendationsEnabled: value },
+    networkInsightsEnabled: { networkInsightsEnabled: value },
+    subscriptionRiskEnabled: { subscriptionRiskEnabled: value },
+    subscriptionRiskAutoSuspend: { subscriptionRiskAutoSuspend: value },
+    nodeAccessRiskEnabled: { nodeAccessRiskEnabled: value },
+    inviteRewardEnabled: { inviteRewardEnabled: value },
+    smtpEnabled: { smtpEnabled: value },
+    smtpSecure: { smtpSecure: value },
+  }[field];
+}
+
+function assertBooleanSettingAllowed(
+  field: BooleanSettingField,
+  value: boolean,
+  current: Awaited<ReturnType<typeof getAppConfig>>,
+) {
+  const smtpReady = Boolean(current.smtpHost && current.smtpPort && current.smtpFromEmail);
+
+  if (field === "smtpEnabled" && value && !smtpReady) {
+    throw new Error("开启邮件服务前，请先保存 SMTP 主机、端口和发件邮箱");
+  }
+  if (field === "smtpEnabled" && !value && current.emailVerificationRequired) {
+    throw new Error("关闭邮件服务前，请先关闭注册邮箱验证");
+  }
+  if (field === "emailVerificationRequired" && value && (!current.smtpEnabled || !smtpReady)) {
+    throw new Error("开启注册邮箱验证前，请先开启邮件服务并完整配置 SMTP");
+  }
 }
 
 function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Awaited<ReturnType<typeof getAppConfig>>) {
@@ -280,6 +339,37 @@ export async function saveAppSettings(formData: FormData): Promise<SettingsActio
     return { ok: true };
   } catch (error) {
     return { ok: false, error: formatActionError(error, "保存失败") };
+  }
+}
+
+export async function saveBooleanAppSetting(input: {
+  field: BooleanSettingField;
+  value: boolean;
+}): Promise<SettingsActionResult> {
+  try {
+    const session = await requireAdmin();
+    const parsed = booleanSettingSchema.parse(input);
+    const current = await getAppConfig();
+    assertBooleanSettingAllowed(parsed.field, parsed.value, current);
+
+    await prisma.appConfig.update({
+      where: { id: current.id },
+      data: booleanSettingData(parsed.field, parsed.value),
+    });
+
+    await recordAuditLog({
+      actor: actorFromSession(session),
+      action: "settings.toggle",
+      targetType: "AppConfig",
+      targetId: current.id,
+      targetLabel: current.siteName,
+      message: `${parsed.value ? "开启" : "关闭"}系统开关 ${parsed.field}`,
+    });
+
+    revalidateSettingsViews();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: formatActionError(error, "更新开关失败") };
   }
 }
 

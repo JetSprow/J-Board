@@ -8,7 +8,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { saveAppSettings, testSmtpSettings } from "@/actions/admin/settings";
+import {
+  saveAppSettings,
+  saveBooleanAppSetting,
+  testSmtpSettings,
+  type BooleanSettingField,
+} from "@/actions/admin/settings";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -67,15 +72,119 @@ interface CouponOption {
 
 const selectClassName = "premium-input w-full appearance-none px-3.5 py-2 text-sm outline-none";
 
+type ToggleValues = Record<BooleanSettingField, boolean>;
+
+const booleanSettingLabels: Record<BooleanSettingField, string> = {
+  allowRegistration: "开放注册",
+  emailVerificationRequired: "注册邮箱验证",
+  requireInviteCode: "邀请码注册",
+  autoReminderDispatchEnabled: "自动提醒派发",
+  trafficSyncEnabled: "3x-ui 流量定时同步",
+  networkRecommendationsEnabled: "三网推荐",
+  networkInsightsEnabled: "线路体验",
+  subscriptionRiskEnabled: "风控总控",
+  subscriptionRiskAutoSuspend: "自动暂停",
+  nodeAccessRiskEnabled: "节点日志风控",
+  inviteRewardEnabled: "自动发放奖励",
+  smtpEnabled: "邮件服务",
+  smtpSecure: "SSL 直连",
+};
+
+function initialToggleValues(config: AppConfig): ToggleValues {
+  return {
+    allowRegistration: config.allowRegistration,
+    emailVerificationRequired: config.emailVerificationRequired,
+    requireInviteCode: config.requireInviteCode,
+    autoReminderDispatchEnabled: config.autoReminderDispatchEnabled,
+    trafficSyncEnabled: config.trafficSyncEnabled,
+    networkRecommendationsEnabled: config.networkRecommendationsEnabled,
+    networkInsightsEnabled: config.networkInsightsEnabled,
+    subscriptionRiskEnabled: config.subscriptionRiskEnabled,
+    subscriptionRiskAutoSuspend: config.subscriptionRiskAutoSuspend,
+    nodeAccessRiskEnabled: config.nodeAccessRiskEnabled,
+    inviteRewardEnabled: config.inviteRewardEnabled,
+    smtpEnabled: config.smtpEnabled,
+    smtpSecure: config.smtpSecure,
+  };
+}
+
 export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: CouponOption[] }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
   const [riskSettingsOpen, setRiskSettingsOpen] = useState(false);
+  const [toggleValues, setToggleValues] = useState<ToggleValues>(() => initialToggleValues(config));
+  const [pendingToggles, setPendingToggles] = useState<Partial<Record<BooleanSettingField, boolean>>>({});
+  const hasPendingToggle = Object.values(pendingToggles).some(Boolean);
+
+  function setToggleValue(field: BooleanSettingField, value: boolean) {
+    setToggleValues((current) => ({ ...current, [field]: value }));
+  }
+
+  function setTogglePending(field: BooleanSettingField, pending: boolean) {
+    setPendingToggles((current) => {
+      const next = { ...current };
+      if (pending) {
+        next[field] = true;
+      } else {
+        delete next[field];
+      }
+      return next;
+    });
+  }
+
+  async function handleImmediateToggle(field: BooleanSettingField, value: boolean) {
+    if (pendingToggles[field] || toggleValues[field] === value) return;
+
+    const previousValue = toggleValues[field];
+    const label = booleanSettingLabels[field];
+    const actionLabel = value ? "开启" : "关闭";
+    setToggleValue(field, value);
+    setTogglePending(field, true);
+
+    try {
+      const result = await saveBooleanAppSetting({ field, value });
+      if (!result.ok) {
+        setToggleValue(field, previousValue);
+        toast.error(`${label}${actionLabel}失败：${getErrorMessage(result.error, "更新失败")}`);
+        return;
+      }
+      router.refresh();
+      toast.success(`${label}${actionLabel}成功`);
+    } catch (error) {
+      setToggleValue(field, previousValue);
+      toast.error(`${label}${actionLabel}失败：${getErrorMessage(error, "更新失败")}`);
+    } finally {
+      setTogglePending(field, false);
+    }
+  }
+
+  function renderImmediateToggle(
+    field: BooleanSettingField,
+    options: {
+      id: string;
+      trueLabel?: string;
+      falseLabel?: string;
+      ariaLabel?: string;
+    },
+  ) {
+    return (
+      <BooleanToggle
+        id={options.id}
+        name={field}
+        value={toggleValues[field]}
+        onChange={(value) => void handleImmediateToggle(field, value)}
+        trueLabel={options.trueLabel}
+        falseLabel={options.falseLabel}
+        ariaLabel={options.ariaLabel ?? booleanSettingLabels[field]}
+        disabled={saving || Boolean(pendingToggles[field])}
+      />
+    );
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || hasPendingToggle) return;
 
     const form = event.currentTarget;
     setSaving(true);
@@ -206,12 +315,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="autoReminderDispatchEnabled">自动提醒派发</Label>
-            <BooleanToggle
-              id="autoReminderDispatchEnabled"
-              name="autoReminderDispatchEnabled"
-              defaultValue={config.autoReminderDispatchEnabled}
-              ariaLabel="自动提醒派发"
-            />
+            {renderImmediateToggle("autoReminderDispatchEnabled", { id: "autoReminderDispatchEnabled" })}
           </div>
           <div className="space-y-2">
             <Label htmlFor="reminderDispatchIntervalMinutes">提醒间隔（分钟）</Label>
@@ -219,12 +323,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           </div>
           <div className="space-y-2">
             <Label htmlFor="trafficSyncEnabled">3x-ui 流量定时同步</Label>
-            <BooleanToggle
-              id="trafficSyncEnabled"
-              name="trafficSyncEnabled"
-              defaultValue={config.trafficSyncEnabled}
-              ariaLabel="3x-ui 流量定时同步"
-            />
+            {renderImmediateToggle("trafficSyncEnabled", { id: "trafficSyncEnabled" })}
           </div>
           <div className="space-y-2">
             <Label htmlFor="trafficSyncIntervalSeconds">流量同步间隔（秒）</Label>
@@ -249,24 +348,14 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="networkRecommendationsEnabled">三网推荐</Label>
-            <BooleanToggle
-              id="networkRecommendationsEnabled"
-              name="networkRecommendationsEnabled"
-              defaultValue={config.networkRecommendationsEnabled}
-              ariaLabel="三网推荐"
-            />
+            {renderImmediateToggle("networkRecommendationsEnabled", { id: "networkRecommendationsEnabled" })}
             <p className="text-xs leading-5 text-muted-foreground">
               开启后，商城展示电信、联通、移动当前最低延迟推荐；点击推荐会直接打开对应套餐详情。
             </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="networkInsightsEnabled">线路体验</Label>
-            <BooleanToggle
-              id="networkInsightsEnabled"
-              name="networkInsightsEnabled"
-              defaultValue={config.networkInsightsEnabled}
-              ariaLabel="线路体验"
-            />
+            {renderImmediateToggle("networkInsightsEnabled", { id: "networkInsightsEnabled" })}
             <p className="text-xs leading-5 text-muted-foreground">
               开启后，套餐详情展示节点延迟、趋势和访问路径；关闭后只保留购买所需的线路入口选择。
             </p>
@@ -287,7 +376,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
             <span className="min-w-0">
               <span className="block text-sm font-semibold">订阅访问风控</span>
               <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                控制订阅接口限流、跨地区访问告警和自动暂停，当前{config.subscriptionRiskEnabled ? "已开启" : "已关闭"}。
+                控制订阅接口限流、跨地区访问告警和自动暂停，当前{toggleValues.subscriptionRiskEnabled ? "已开启" : "已关闭"}。
               </span>
             </span>
           </span>
@@ -302,23 +391,16 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
             <div className="grid gap-5 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="subscriptionRiskEnabled">风控总控</Label>
-                <BooleanToggle
-                  id="subscriptionRiskEnabled"
-                  name="subscriptionRiskEnabled"
-                  defaultValue={config.subscriptionRiskEnabled}
-                  ariaLabel="风控总控"
-                />
+                {renderImmediateToggle("subscriptionRiskEnabled", { id: "subscriptionRiskEnabled" })}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subscriptionRiskAutoSuspend">自动暂停</Label>
-                <BooleanToggle
-                  id="subscriptionRiskAutoSuspend"
-                  name="subscriptionRiskAutoSuspend"
-                  defaultValue={config.subscriptionRiskAutoSuspend}
-                  trueLabel="开启自动封停"
-                  falseLabel="只记录警告"
-                  ariaLabel="自动暂停"
-                />
+                {renderImmediateToggle("subscriptionRiskAutoSuspend", {
+                  id: "subscriptionRiskAutoSuspend",
+                  trueLabel: "开启自动封停",
+                  falseLabel: "只记录警告",
+                  ariaLabel: "自动暂停",
+                })}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subscriptionRiskWindowHours">统计窗口（小时）</Label>
@@ -421,14 +503,12 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nodeAccessRiskEnabled">节点日志风控</Label>
-                <BooleanToggle
-                  id="nodeAccessRiskEnabled"
-                  name="nodeAccessRiskEnabled"
-                  defaultValue={config.nodeAccessRiskEnabled}
-                  trueLabel="接收日志"
-                  falseLabel="仅订阅风控"
-                  ariaLabel="节点日志风控"
-                />
+                {renderImmediateToggle("nodeAccessRiskEnabled", {
+                  id: "nodeAccessRiskEnabled",
+                  trueLabel: "接收日志",
+                  falseLabel: "仅订阅风控",
+                  ariaLabel: "节点日志风控",
+                })}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nodeAccessConnectionWarning">节点连接警告阈值</Label>
@@ -461,36 +541,30 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="allowRegistration">开放注册</Label>
-            <BooleanToggle
-              id="allowRegistration"
-              name="allowRegistration"
-              defaultValue={config.allowRegistration}
-              trueLabel="开放"
-              falseLabel="关闭"
-              ariaLabel="开放注册"
-            />
+            {renderImmediateToggle("allowRegistration", {
+              id: "allowRegistration",
+              trueLabel: "开放",
+              falseLabel: "关闭",
+              ariaLabel: "开放注册",
+            })}
           </div>
           <div className="space-y-2">
             <Label htmlFor="requireInviteCode">注册必须邀请码</Label>
-            <BooleanToggle
-              id="requireInviteCode"
-              name="requireInviteCode"
-              defaultValue={config.requireInviteCode}
-              trueLabel="必须"
-              falseLabel="不需要"
-              ariaLabel="注册必须邀请码"
-            />
+            {renderImmediateToggle("requireInviteCode", {
+              id: "requireInviteCode",
+              trueLabel: "必须",
+              falseLabel: "不需要",
+              ariaLabel: "注册必须邀请码",
+            })}
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="emailVerificationRequired">注册邮箱验证</Label>
-            <BooleanToggle
-              id="emailVerificationRequired"
-              name="emailVerificationRequired"
-              defaultValue={config.emailVerificationRequired}
-              trueLabel="开启验证"
-              falseLabel="关闭"
-              ariaLabel="注册邮箱验证"
-            />
+            {renderImmediateToggle("emailVerificationRequired", {
+              id: "emailVerificationRequired",
+              trueLabel: "开启验证",
+              falseLabel: "关闭",
+              ariaLabel: "注册邮箱验证",
+            })}
             <p className="text-xs leading-5 text-muted-foreground">开启后，新用户注册会先收到验证邮件，完成验证后才能登录；关闭后注册成功即可登录。</p>
           </div>
         </div>
@@ -506,12 +580,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="smtpEnabled">邮件服务</Label>
-            <BooleanToggle
-              id="smtpEnabled"
-              name="smtpEnabled"
-              defaultValue={config.smtpEnabled}
-              ariaLabel="邮件服务"
-            />
+            {renderImmediateToggle("smtpEnabled", { id: "smtpEnabled" })}
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtpHost">SMTP 主机</Label>
@@ -523,14 +592,12 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtpSecure">TLS / SSL</Label>
-            <BooleanToggle
-              id="smtpSecure"
-              name="smtpSecure"
-              defaultValue={config.smtpSecure}
-              trueLabel="SSL 直连"
-              falseLabel="STARTTLS"
-              ariaLabel="TLS / SSL"
-            />
+            {renderImmediateToggle("smtpSecure", {
+              id: "smtpSecure",
+              trueLabel: "SSL 直连",
+              falseLabel: "STARTTLS",
+              ariaLabel: "TLS / SSL",
+            })}
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtpUser">SMTP 用户名</Label>
@@ -568,12 +635,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="inviteRewardEnabled">自动发放奖励</Label>
-            <BooleanToggle
-              id="inviteRewardEnabled"
-              name="inviteRewardEnabled"
-              defaultValue={config.inviteRewardEnabled}
-              ariaLabel="自动发放奖励"
-            />
+            {renderImmediateToggle("inviteRewardEnabled", { id: "inviteRewardEnabled" })}
           </div>
           <div className="space-y-2">
             <Label htmlFor="inviteRewardRate">返利比例（%）</Label>
@@ -646,8 +708,8 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
       </section>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button type="submit" size="lg" disabled={saving}>
-          {saving ? "保存中..." : "保存设置"}
+        <Button type="submit" size="lg" disabled={saving || hasPendingToggle}>
+          {saving ? "保存中..." : hasPendingToggle ? "开关更新中..." : "保存设置"}
         </Button>
         <a href="/api/admin/export/config" className={buttonVariants({ variant: "outline", size: "lg" })}>
           导出配置备份
