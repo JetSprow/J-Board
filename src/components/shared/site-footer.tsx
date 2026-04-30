@@ -1,7 +1,7 @@
 import { GitFork } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
-import { PRODUCT_BASE_NAME, PRODUCT_EDITION, PRODUCT_REPOSITORY_URL, PRODUCT_VERSION } from "@/lib/product";
+import { PRODUCT_EDITION, PRODUCT_REPOSITORY_URL, PRODUCT_VERSION } from "@/lib/product";
 
 export function SiteFooter({ className }: { className?: string }) {
   return (
@@ -11,9 +11,8 @@ export function SiteFooter({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-2.5 py-1 text-foreground shadow-sm">
-        <span className="font-semibold">{PRODUCT_BASE_NAME}</span>
-        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase text-primary">
+      <div className="inline-flex min-h-7 items-center gap-1.5 text-foreground">
+        <span className="rounded-md bg-primary px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase text-primary-foreground">
           {PRODUCT_EDITION}
         </span>
         <span className="font-mono text-[0.72rem] text-muted-foreground">v{PRODUCT_VERSION}</span>
