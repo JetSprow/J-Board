@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { BooleanToggle } from "@/components/ui/boolean-toggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import type { PlanFormValue, PlanType } from "./plan-form-types";
 
 type FieldId = (name: string) => string;
@@ -52,7 +52,15 @@ export function PlanPolicySection({
             <p id={fieldId("allowRenewal-label")} className="text-sm font-medium">开放续费</p>
             <p className="text-xs text-muted-foreground">用户可拖动选择续费时长</p>
           </div>
-          <Switch aria-labelledby={fieldId("allowRenewal-label")} checked={allowRenewal} onCheckedChange={setAllowRenewal} />
+          <div className="w-40">
+            <BooleanToggle
+              value={allowRenewal}
+              onChange={setAllowRenewal}
+              trueLabel="开放"
+              falseLabel="关闭"
+              ariaLabel="开放续费"
+            />
+          </div>
         </div>
         {type === "PROXY" && (
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/20 p-3">
@@ -60,7 +68,15 @@ export function PlanPolicySection({
               <p id={fieldId("allowTrafficTopup-label")} className="text-sm font-medium">开放增流量</p>
               <p className="text-xs text-muted-foreground">用户可拖动选择加多少 GB</p>
             </div>
-            <Switch aria-labelledby={fieldId("allowTrafficTopup-label")} checked={allowTrafficTopup} onCheckedChange={setAllowTrafficTopup} />
+            <div className="w-40">
+              <BooleanToggle
+                value={allowTrafficTopup}
+                onChange={setAllowTrafficTopup}
+                trueLabel="开放"
+                falseLabel="关闭"
+                ariaLabel="开放增流量"
+              />
+            </div>
           </div>
         )}
       </div>

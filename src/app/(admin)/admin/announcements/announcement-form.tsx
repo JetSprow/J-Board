@@ -11,6 +11,7 @@ import {
   updateAnnouncement,
 } from "@/actions/admin/announcements";
 import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
+import { BooleanToggle } from "@/components/ui/boolean-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -136,15 +137,14 @@ export function AnnouncementForm({
             </div>
             <div className="space-y-2">
               <Label htmlFor={`dismissible-${announcement.id}`}>允许用户关闭</Label>
-              <select
+              <BooleanToggle
                 id={`dismissible-${announcement.id}`}
                 name="dismissible"
-                defaultValue={announcement.dismissible ? "true" : "false"}
-                className="h-10 w-full px-3 text-sm outline-none"
-              >
-                <option value="true">是</option>
-                <option value="false">否</option>
-              </select>
+                defaultValue={announcement.dismissible}
+                trueLabel="允许"
+                falseLabel="不允许"
+                ariaLabel="允许用户关闭"
+              />
             </div>
           </div>
 
@@ -200,15 +200,14 @@ export function AnnouncementForm({
 
           <div className="space-y-2">
             <Label htmlFor={`sendNotification-${announcement.id}`}>同步发送站内通知</Label>
-            <select
+            <BooleanToggle
               id={`sendNotification-${announcement.id}`}
               name="sendNotification"
-              defaultValue={announcement.sendNotification ? "true" : "false"}
-              className="h-10 w-full px-3 text-sm outline-none"
-            >
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
+              defaultValue={announcement.sendNotification}
+              trueLabel="发送"
+              falseLabel="不发送"
+              ariaLabel="同步发送站内通知"
+            />
           </div>
 
           <PendingSubmitButton className="w-full" pendingLabel="保存中...">
@@ -285,15 +284,14 @@ export function CreateAnnouncementButton({
             </div>
             <div className="space-y-2">
               <Label htmlFor="create-announcement-dismissible">允许用户关闭</Label>
-              <select
+              <BooleanToggle
                 id="create-announcement-dismissible"
                 name="dismissible"
-                defaultValue="true"
-                className="h-10 w-full px-3 text-sm outline-none"
-              >
-                <option value="true">是</option>
-                <option value="false">否</option>
-              </select>
+                defaultValue
+                trueLabel="允许"
+                falseLabel="不允许"
+                ariaLabel="允许用户关闭"
+              />
             </div>
           </div>
 
@@ -333,15 +331,14 @@ export function CreateAnnouncementButton({
 
           <div className="space-y-2">
             <Label htmlFor="create-announcement-sendNotification">同步发送站内通知</Label>
-            <select
+            <BooleanToggle
               id="create-announcement-sendNotification"
               name="sendNotification"
-              defaultValue="true"
-              className="h-10 w-full px-3 text-sm outline-none"
-            >
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
+              defaultValue
+              trueLabel="发送"
+              falseLabel="不发送"
+              ariaLabel="同步发送站内通知"
+            />
           </div>
 
           <PendingSubmitButton className="w-full" pendingLabel="发布中...">

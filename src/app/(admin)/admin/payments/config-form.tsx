@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { BooleanToggle } from "@/components/ui/boolean-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { savePaymentConfig } from "@/actions/admin/payments";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "sonner";
@@ -121,9 +121,15 @@ export function PaymentConfigForm({
         )}
       </div>
       <div className="flex flex-col gap-3 border-t border-border/50 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
-          <span className="text-sm">{enabled ? "已启用" : "未启用"}</span>
+        <div className="w-full sm:w-56">
+          <Label className="mb-2 block text-xs text-muted-foreground">支付通道状态</Label>
+          <BooleanToggle
+            value={enabled}
+            onChange={setEnabled}
+            trueLabel="启用"
+            falseLabel="停用"
+            ariaLabel="支付通道状态"
+          />
         </div>
         <Button type="submit" size="sm" disabled={saving}>
           {saving ? "保存中..." : "保存配置"}

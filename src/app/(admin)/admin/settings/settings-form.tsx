@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, Clock3, Gift, LifeBuoy, Mail, RadioTower, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { BooleanToggle } from "@/components/ui/boolean-toggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -205,15 +206,12 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="autoReminderDispatchEnabled">自动提醒派发</Label>
-            <select
+            <BooleanToggle
               id="autoReminderDispatchEnabled"
               name="autoReminderDispatchEnabled"
-              defaultValue={String(config.autoReminderDispatchEnabled)}
-              className={selectClassName}
-            >
-              <option value="true">开启</option>
-              <option value="false">关闭</option>
-            </select>
+              defaultValue={config.autoReminderDispatchEnabled}
+              ariaLabel="自动提醒派发"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="reminderDispatchIntervalMinutes">提醒间隔（分钟）</Label>
@@ -221,15 +219,12 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           </div>
           <div className="space-y-2">
             <Label htmlFor="trafficSyncEnabled">3x-ui 流量定时同步</Label>
-            <select
+            <BooleanToggle
               id="trafficSyncEnabled"
               name="trafficSyncEnabled"
-              defaultValue={String(config.trafficSyncEnabled)}
-              className={selectClassName}
-            >
-              <option value="true">开启</option>
-              <option value="false">关闭</option>
-            </select>
+              defaultValue={config.trafficSyncEnabled}
+              ariaLabel="3x-ui 流量定时同步"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="trafficSyncIntervalSeconds">流量同步间隔（秒）</Label>
@@ -254,30 +249,24 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="networkRecommendationsEnabled">三网推荐</Label>
-            <select
+            <BooleanToggle
               id="networkRecommendationsEnabled"
               name="networkRecommendationsEnabled"
-              defaultValue={String(config.networkRecommendationsEnabled)}
-              className={selectClassName}
-            >
-              <option value="false">关闭</option>
-              <option value="true">开启</option>
-            </select>
+              defaultValue={config.networkRecommendationsEnabled}
+              ariaLabel="三网推荐"
+            />
             <p className="text-xs leading-5 text-muted-foreground">
               开启后，商城展示电信、联通、移动当前最低延迟推荐；点击推荐会直接打开对应套餐详情。
             </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="networkInsightsEnabled">线路体验</Label>
-            <select
+            <BooleanToggle
               id="networkInsightsEnabled"
               name="networkInsightsEnabled"
-              defaultValue={String(config.networkInsightsEnabled)}
-              className={selectClassName}
-            >
-              <option value="false">关闭</option>
-              <option value="true">开启</option>
-            </select>
+              defaultValue={config.networkInsightsEnabled}
+              ariaLabel="线路体验"
+            />
             <p className="text-xs leading-5 text-muted-foreground">
               开启后，套餐详情展示节点延迟、趋势和访问路径；关闭后只保留购买所需的线路入口选择。
             </p>
@@ -313,27 +302,23 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
             <div className="grid gap-5 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="subscriptionRiskEnabled">风控总控</Label>
-                <select
+                <BooleanToggle
                   id="subscriptionRiskEnabled"
                   name="subscriptionRiskEnabled"
-                  defaultValue={String(config.subscriptionRiskEnabled)}
-                  className={selectClassName}
-                >
-                  <option value="true">开启</option>
-                  <option value="false">关闭</option>
-                </select>
+                  defaultValue={config.subscriptionRiskEnabled}
+                  ariaLabel="风控总控"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subscriptionRiskAutoSuspend">自动暂停</Label>
-                <select
+                <BooleanToggle
                   id="subscriptionRiskAutoSuspend"
                   name="subscriptionRiskAutoSuspend"
-                  defaultValue={String(config.subscriptionRiskAutoSuspend)}
-                  className={selectClassName}
-                >
-                  <option value="true">开启，达到暂停阈值自动封停</option>
-                  <option value="false">关闭，只记录警告</option>
-                </select>
+                  defaultValue={config.subscriptionRiskAutoSuspend}
+                  trueLabel="开启自动封停"
+                  falseLabel="只记录警告"
+                  ariaLabel="自动暂停"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subscriptionRiskWindowHours">统计窗口（小时）</Label>
@@ -436,15 +421,14 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nodeAccessRiskEnabled">节点日志风控</Label>
-                <select
+                <BooleanToggle
                   id="nodeAccessRiskEnabled"
                   name="nodeAccessRiskEnabled"
-                  defaultValue={String(config.nodeAccessRiskEnabled)}
-                  className={selectClassName}
-                >
-                  <option value="true">开启，接收 Agent Xray 日志上报</option>
-                  <option value="false">关闭，只保留订阅接口风控</option>
-                </select>
+                  defaultValue={config.nodeAccessRiskEnabled}
+                  trueLabel="接收日志"
+                  falseLabel="仅订阅风控"
+                  ariaLabel="节点日志风控"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nodeAccessConnectionWarning">节点连接警告阈值</Label>
@@ -477,39 +461,36 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="allowRegistration">开放注册</Label>
-            <select
+            <BooleanToggle
               id="allowRegistration"
               name="allowRegistration"
-              defaultValue={String(config.allowRegistration)}
-              className={selectClassName}
-            >
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
+              defaultValue={config.allowRegistration}
+              trueLabel="开放"
+              falseLabel="关闭"
+              ariaLabel="开放注册"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="requireInviteCode">注册必须邀请码</Label>
-            <select
+            <BooleanToggle
               id="requireInviteCode"
               name="requireInviteCode"
-              defaultValue={String(config.requireInviteCode)}
-              className={selectClassName}
-            >
-              <option value="false">否</option>
-              <option value="true">是</option>
-            </select>
+              defaultValue={config.requireInviteCode}
+              trueLabel="必须"
+              falseLabel="不需要"
+              ariaLabel="注册必须邀请码"
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="emailVerificationRequired">注册邮箱验证</Label>
-            <select
+            <BooleanToggle
               id="emailVerificationRequired"
               name="emailVerificationRequired"
-              defaultValue={String(config.emailVerificationRequired)}
-              className={selectClassName}
-            >
-              <option value="false">关闭</option>
-              <option value="true">开启，注册后必须验证邮箱</option>
-            </select>
+              defaultValue={config.emailVerificationRequired}
+              trueLabel="开启验证"
+              falseLabel="关闭"
+              ariaLabel="注册邮箱验证"
+            />
             <p className="text-xs leading-5 text-muted-foreground">开启后，新用户注册会先收到验证邮件，完成验证后才能登录；关闭后注册成功即可登录。</p>
           </div>
         </div>
@@ -525,10 +506,12 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="smtpEnabled">邮件服务</Label>
-            <select id="smtpEnabled" name="smtpEnabled" defaultValue={String(config.smtpEnabled)} className={selectClassName}>
-              <option value="false">关闭</option>
-              <option value="true">开启</option>
-            </select>
+            <BooleanToggle
+              id="smtpEnabled"
+              name="smtpEnabled"
+              defaultValue={config.smtpEnabled}
+              ariaLabel="邮件服务"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtpHost">SMTP 主机</Label>
@@ -540,10 +523,14 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtpSecure">TLS / SSL</Label>
-            <select id="smtpSecure" name="smtpSecure" defaultValue={String(config.smtpSecure)} className={selectClassName}>
-              <option value="false">STARTTLS / 普通连接</option>
-              <option value="true">SSL 直连</option>
-            </select>
+            <BooleanToggle
+              id="smtpSecure"
+              name="smtpSecure"
+              defaultValue={config.smtpSecure}
+              trueLabel="SSL 直连"
+              falseLabel="STARTTLS"
+              ariaLabel="TLS / SSL"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="smtpUser">SMTP 用户名</Label>
@@ -581,15 +568,12 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         <div className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="inviteRewardEnabled">自动发放奖励</Label>
-            <select
+            <BooleanToggle
               id="inviteRewardEnabled"
               name="inviteRewardEnabled"
-              defaultValue={String(config.inviteRewardEnabled)}
-              className={selectClassName}
-            >
-              <option value="false">关闭</option>
-              <option value="true">开启</option>
-            </select>
+              defaultValue={config.inviteRewardEnabled}
+              ariaLabel="自动发放奖励"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="inviteRewardRate">返利比例（%）</Label>

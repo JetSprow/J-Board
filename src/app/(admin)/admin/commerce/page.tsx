@@ -5,6 +5,7 @@ import { DetailItem, DetailList } from "@/components/admin/detail-list";
 import { ActiveStatusBadge, StatusBadge } from "@/components/admin/status-badge";
 import { PageHeader, PageShell, SectionHeader } from "@/components/shared/page-shell";
 import { PendingSubmitButton } from "@/components/shared/pending-submit-button";
+import { BooleanToggle } from "@/components/ui/boolean-toggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,10 +69,14 @@ export default async function AdminCommercePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="coupon-public">用户可见</Label>
-                <select id="coupon-public" name="isPublic" className={selectClassName} defaultValue="true">
-                  <option value="true">公开展示</option>
-                  <option value="false">仅发放可用</option>
-                </select>
+                <BooleanToggle
+                  id="coupon-public"
+                  name="isPublic"
+                  defaultValue
+                  trueLabel="公开展示"
+                  falseLabel="仅发放"
+                  ariaLabel="用户可见"
+                />
               </div>
               <PendingSubmitButton className="w-full" pendingLabel="创建中...">创建优惠券</PendingSubmitButton>
             </form>
