@@ -193,7 +193,7 @@ docker compose up -d app
 ```bash
 git pull --ff-only
 docker compose build init app
-docker compose --profile setup run --rm init sh -lc 'npm run db:push'
+docker compose --profile setup run --rm init sh -lc 'npm run db:push && chown -R 1001:1001 /app/storage'
 docker compose up -d app
 ```
 
@@ -210,7 +210,7 @@ docker compose up -d app
 ```bash
 docker compose ps
 docker compose logs -f app
-docker compose --profile setup run --rm init sh -lc 'npm run db:push'
+docker compose --profile setup run --rm init sh -lc 'npm run db:push && chown -R 1001:1001 /app/storage'
 ```
 
 如果页面仍是旧版本，确认已执行 `docker compose build init app` 和 `docker compose up -d app`。如果 schema 没生效，单独运行 `npm run db:push` 对应的 setup 命令。
@@ -442,7 +442,7 @@ npm run build
 数据库变更：
 
 - 修改 `prisma/schema.prisma` 后运行 `npm run db:push`。
-- 生产 Docker 部署更新后，运行 `docker compose --profile setup run --rm init sh -lc 'npm run db:push'`。
+- 生产 Docker 部署更新后，运行 `docker compose --profile setup run --rm init sh -lc 'npm run db:push && chown -R 1001:1001 /app/storage'`。
 - 当前项目使用 `prisma db push --accept-data-loss`，上线前请确认 schema 变更不会误删重要数据。
 
 Agent 开发：

@@ -26,7 +26,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
-CMD ["sh", "-c", "npm run db:push && npm run db:seed"]
+CMD ["sh", "-c", "npm run db:push && npm run db:seed && chown -R 1001:1001 /app/storage"]
 
 # --- runner: minimal production image ---
 FROM base AS runner

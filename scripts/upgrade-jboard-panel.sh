@@ -80,7 +80,7 @@ echo "[3/7] Building updated images..."
 build_updated_images
 
 echo "[4/7] Syncing Prisma schema inside Docker network..."
-compose --profile setup run --rm init sh -lc 'npm run db:push'
+compose --profile setup run --rm init sh -lc 'npm run db:push && chown -R 1001:1001 /app/storage'
 
 echo "[5/7] Restarting services..."
 compose up -d app
