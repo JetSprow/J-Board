@@ -7,10 +7,10 @@ import { PageTransition } from "@/components/shared/page-transition";
 
 export const metadata: Metadata = {
   title: {
-    default: "登录与注册",
-    template: "%s | J-Board",
+    default: "账户入口",
+    template: "%s | J-Board Lite",
   },
-  description: "登录或注册 J-Board 账号。",
+  description: "登录 J-Board Lite 账号，或通过邮箱找回密码。",
 };
 
 export default async function AuthLayout({

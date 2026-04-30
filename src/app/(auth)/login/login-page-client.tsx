@@ -9,9 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TurnstileWidget } from "@/components/shared/turnstile-widget";
+import { PRODUCT_NAME } from "@/lib/product";
 import { AuthCard, AuthErrorMessage, AuthShell } from "../_components/auth-shell";
 
-export function LoginPageClient({ siteKey }: { siteKey?: string | null }) {
+export function LoginPageClient({
+  siteKey,
+  allowRegistration,
+}: {
+  siteKey?: string | null;
+  allowRegistration: boolean;
+}) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,7 +50,7 @@ export function LoginPageClient({ siteKey }: { siteKey?: string | null }) {
 
   return (
     <AuthShell>
-      <AuthCard title="J-Board" description="登录你的 JB面板账户">
+      <AuthCard title={PRODUCT_NAME} description="登录你的面板账户">
         <form onSubmit={onSubmit} className="space-y-4">
           <AuthErrorMessage message={error} />
           <div className="space-y-2">
@@ -63,13 +70,17 @@ export function LoginPageClient({ siteKey }: { siteKey?: string | null }) {
           <Link href="/forgot-password" className="font-medium text-primary hover:underline">
             忘记密码
           </Link>
-          <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
-          <span>
-            没有账户？{" "}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              注册
-            </Link>
-          </span>
+          {allowRegistration && (
+            <>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
+              <span>
+                没有账户？{" "}
+                <Link href="/register" className="font-medium text-primary hover:underline">
+                  注册
+                </Link>
+              </span>
+            </>
+          )}
           {error === "邮箱尚未验证，请先查收验证邮件" && (
             <>
               <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />

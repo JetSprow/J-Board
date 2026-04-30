@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/theme-provider";
+import { PRODUCT_NAME } from "@/lib/product";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "J-Board - JB面板",
-    template: "%s | J-Board",
+    default: `${PRODUCT_NAME} - JB面板轻量版`,
+    template: `%s | ${PRODUCT_NAME}`,
   },
-  description: "J-Board（JB面板）订阅共享与节点管理平台",
+  description: "J-Board Lite（JB面板轻量版）订阅共享与节点管理平台",
 };
 
 export default function RootLayout({

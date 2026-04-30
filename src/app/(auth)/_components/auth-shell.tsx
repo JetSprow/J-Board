@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PublicNotice } from "../public-notice";
 import { SiteFooter } from "@/components/shared/site-footer";
+import { PRODUCT_EDITION } from "@/lib/product";
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
@@ -36,7 +37,7 @@ export function AuthCard({
       {(title || description) && (
         <CardHeader className="space-y-2 pt-6 text-center">
           <div className="mx-auto flex size-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            S
+            {PRODUCT_EDITION.slice(0, 1)}
           </div>
           {title && <h1 className="text-display text-2xl font-semibold">{title}</h1>}
           {description && <p className="text-sm leading-6 text-muted-foreground">{description}</p>}

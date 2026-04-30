@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TurnstileWidget } from "@/components/shared/turnstile-widget";
 import { getErrorMessage } from "@/lib/errors";
+import { PRODUCT_NAME } from "@/lib/product";
 import { AuthCard, AuthErrorMessage, AuthShell } from "../_components/auth-shell";
 
 export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
@@ -80,7 +81,7 @@ export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
 
   return (
     <AuthShell>
-      <AuthCard title="J-Board" description="创建 JB面板账户">
+      <AuthCard title={PRODUCT_NAME} description="创建面板账户">
         <form onSubmit={onSubmit} className="space-y-4">
           <AuthErrorMessage message={error} />
           <div className="space-y-2">
