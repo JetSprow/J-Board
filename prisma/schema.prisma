@@ -215,6 +215,24 @@ model EmailToken {
   @@index([expiresAt])
 }
 
+model PendingRegistration {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  inviteCode   String?
+  invitedById  String?
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([consumedAt, expiresAt])
+  @@index([expiresAt])
+  @@index([invitedById])
+}
+
 model SubscriptionCategory {
   id          String           @id @default(cuid())
   name        String
@@ -780,10 +798,10 @@ model AppConfig {
   subscriptionRiskIpLimitPerHour    Int      @default(180)
   subscriptionRiskTokenLimitPerHour Int      @default(60)
   nodeAccessRiskEnabled             Boolean  @default(true)
-  nodeAccessConnectionWarning        Int      @default(180)
-  nodeAccessConnectionSuspend        Int      @default(360)
-  nodeAccessUniqueTargetWarning      Int      @default(80)
-  nodeAccessUniqueTargetSuspend      Int      @default(160)
+  nodeAccessConnectionWarning       Int      @default(180)
+  nodeAccessConnectionSuspend       Int      @default(360)
+  nodeAccessUniqueTargetWarning     Int      @default(80)
+  nodeAccessUniqueTargetSuspend     Int      @default(160)
   inviteRewardCouponId              String?
   inviteRewardRate                  Decimal  @default(0)
   inviteRewardEnabled               Boolean  @default(false)

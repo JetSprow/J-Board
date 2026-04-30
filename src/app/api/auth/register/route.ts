@@ -6,7 +6,7 @@ import { getAppConfig } from "@/services/app-config";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/request-context";
-import { isSmtpConfigured, normalizeEmailAddress, sendRegistrationVerificationEmail } from "@/services/email";
+import { isSmtpConfigured, normalizeEmailAddress, sendPendingRegistrationVerificationEmail } from "@/services/email";
 import { decryptIfEncrypted } from "@/lib/crypto";
 
 const schema = z.object({
@@ -90,33 +90,37 @@ export async function POST(req: Request) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: {
-      email,
-      emailVerifiedAt: config.emailVerificationRequired ? null : new Date(),
-      status: config.emailVerificationRequired ? "PENDING_EMAIL" : "ACTIVE",
-      password: hashedPassword,
-      name: name || null,
-      invitedById: inviterId,
-    },
-    select: { id: true, email: true },
-  });
-
   if (config.emailVerificationRequired) {
     try {
-      await sendRegistrationVerificationEmail({
-        userId: user.id,
-        email: user.email,
+      await sendPendingRegistrationVerificationEmail({
+        email,
+        passwordHash: hashedPassword,
+        name: name || null,
+        inviteCode: inviteCode || null,
+        invitedById: inviterId,
         headers: req.headers,
         requestUrl: req.url,
       });
     } catch (error) {
-      await prisma.user.delete({ where: { id: user.id } }).catch(() => null);
       return NextResponse.json(
         { error: error instanceof Error ? error.message : "验证邮件发送失败" },
         { status: 500 },
       );
     }
+  } else {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.create({
+        data: {
+          email,
+          emailVerifiedAt: new Date(),
+          status: "ACTIVE",
+          password: hashedPassword,
+          name: name || null,
+          invitedById: inviterId,
+        },
+      });
+      await tx.pendingRegistration.deleteMany({ where: { email } });
+    });
   }
 
   return NextResponse.json({ ok: true, requiresEmailVerification: config.emailVerificationRequired });

@@ -7,7 +7,15 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/request-context";
 import { getAppConfig } from "@/services/app-config";
-import { isSmtpConfigured, normalizeEmailAddress, sendPasswordResetEmail, sendRegistrationVerificationEmail, consumePasswordResetToken, verifyEmailToken } from "@/services/email";
+import {
+  consumePasswordResetToken,
+  isSmtpConfigured,
+  normalizeEmailAddress,
+  resendPendingRegistrationVerificationEmail,
+  sendPasswordResetEmail,
+  sendRegistrationVerificationEmail,
+  verifyEmailToken,
+} from "@/services/email";
 
 const emailSchema = z.object({
   email: z.string().trim().email("请输入正确的邮箱"),
@@ -83,7 +91,13 @@ export async function requestRegistrationVerification(formData: FormData) {
       email: user.email,
       ...context,
     });
+    return;
   }
+
+  await resendPendingRegistrationVerificationEmail({
+    email,
+    ...context,
+  });
 }
 
 export async function resetPasswordByEmail(formData: FormData) {

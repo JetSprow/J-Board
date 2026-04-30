@@ -68,7 +68,7 @@ export function RegisterPageClient({ siteKey }: { siteKey?: string | null }) {
             <div className="text-4xl" aria-hidden="true">🎉</div>
             <h1 className="text-xl font-semibold tracking-tight">{requiresEmailVerification ? "验证邮件已发送" : "注册成功"}</h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              {requiresEmailVerification ? "请查收邮箱并完成验证，验证后即可登录。" : "账户已创建，请登录。"}
+              {requiresEmailVerification ? "请查收邮箱并完成验证，验证后会自动创建账户。" : "账户已创建，请登录。"}
             </p>
             <Link href={requiresEmailVerification ? "/verify-email-request" : "/login"} className={buttonVariants({ size: "lg", className: "w-full" })}>
               {requiresEmailVerification ? "没有收到？重新发送" : "去登录"}

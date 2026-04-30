@@ -161,6 +161,85 @@ export async function sendRegistrationVerificationEmail(input: {
   });
 }
 
+export async function sendPendingRegistrationVerificationEmail(input: {
+  email: string;
+  passwordHash: string;
+  name?: string | null;
+  inviteCode?: string | null;
+  invitedById?: string | null;
+  headers?: Headers;
+  requestUrl?: string;
+}) {
+  const config = await getAppConfig();
+  const email = normalizeEmailAddress(input.email);
+  const token = crypto.randomBytes(TOKEN_BYTES).toString("hex");
+
+  await prisma.pendingRegistration.upsert({
+    where: { email },
+    create: {
+      email,
+      passwordHash: input.passwordHash,
+      name: input.name || null,
+      inviteCode: input.inviteCode || null,
+      invitedById: input.invitedById || null,
+      tokenHash: hashToken(token),
+      expiresAt: addMinutes(REGISTRATION_TTL_MINUTES),
+    },
+    update: {
+      passwordHash: input.passwordHash,
+      name: input.name || null,
+      inviteCode: input.inviteCode || null,
+      invitedById: input.invitedById || null,
+      tokenHash: hashToken(token),
+      expiresAt: addMinutes(REGISTRATION_TTL_MINUTES),
+      consumedAt: null,
+    },
+  });
+
+  const url = await buildActionUrl("/verify-email", token, input);
+  const template = renderRegistrationEmail(config.siteName, url);
+
+  await sendMail(config, email, {
+    subject: `验证你的 ${config.siteName} 邮箱`,
+    ...template,
+  });
+}
+
+export async function resendPendingRegistrationVerificationEmail(input: {
+  email: string;
+  headers?: Headers;
+  requestUrl?: string;
+}) {
+  const config = await getAppConfig();
+  const email = normalizeEmailAddress(input.email);
+  const pending = await prisma.pendingRegistration.findUnique({
+    where: { email },
+    select: { id: true, consumedAt: true },
+  });
+
+  if (!pending || pending.consumedAt) return false;
+
+  const token = crypto.randomBytes(TOKEN_BYTES).toString("hex");
+  await prisma.pendingRegistration.update({
+    where: { id: pending.id },
+    data: {
+      tokenHash: hashToken(token),
+      expiresAt: addMinutes(REGISTRATION_TTL_MINUTES),
+      consumedAt: null,
+    },
+  });
+
+  const url = await buildActionUrl("/verify-email", token, input);
+  const template = renderRegistrationEmail(config.siteName, url);
+
+  await sendMail(config, email, {
+    subject: `验证你的 ${config.siteName} 邮箱`,
+    ...template,
+  });
+
+  return true;
+}
+
 export async function sendPasswordResetEmail(input: {
   userId: string;
   email: string;
@@ -237,6 +316,9 @@ export async function consumeEmailToken(token: string, purpose?: EmailPurpose) {
 }
 
 export async function verifyEmailToken(token: string) {
+  const pendingResult = await consumePendingRegistrationToken(token);
+  if (pendingResult) return pendingResult;
+
   const record = await consumeEmailToken(token);
   if (!record) return { ok: false as const, message: "验证链接无效或已过期" };
 
@@ -278,6 +360,79 @@ export async function verifyEmailToken(token: string) {
   }
 
   return { ok: false as const, message: "这个链接不能用于邮箱验证" };
+}
+
+async function consumePendingRegistrationToken(token: string) {
+  const tokenHash = hashToken(token.trim());
+  const pending = await prisma.pendingRegistration.findUnique({ where: { tokenHash } });
+
+  if (!pending || pending.consumedAt || pending.expiresAt <= new Date()) {
+    return null;
+  }
+
+  const now = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    const consumed = await tx.pendingRegistration.updateMany({
+      where: {
+        id: pending.id,
+        consumedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { consumedAt: now },
+    });
+
+    if (consumed.count !== 1) {
+      return { ok: false as const, message: "验证链接无效或已过期" };
+    }
+
+    const existing = await tx.user.findUnique({
+      where: { email: pending.email },
+      select: { id: true },
+    });
+    if (existing) {
+      await tx.pendingRegistration.delete({ where: { id: pending.id } });
+      return { ok: false as const, message: "这个邮箱已经注册，请直接登录。" };
+    }
+
+    let invitedById = pending.invitedById;
+    if (invitedById) {
+      const inviter = await tx.user.findUnique({
+        where: { id: invitedById },
+        select: { id: true },
+      });
+      invitedById = inviter?.id ?? null;
+    }
+    if (!invitedById && pending.inviteCode) {
+      const inviter = await tx.user.findUnique({
+        where: { inviteCode: pending.inviteCode },
+        select: { id: true },
+      });
+      invitedById = inviter?.id ?? null;
+    }
+
+    try {
+      await tx.user.create({
+        data: {
+          email: pending.email,
+          password: pending.passwordHash,
+          name: pending.name,
+          invitedById,
+          emailVerifiedAt: now,
+          status: "ACTIVE",
+        },
+      });
+      await tx.pendingRegistration.delete({ where: { id: pending.id } });
+    } catch (error) {
+      if ((error as { code?: string }).code === "P2002") {
+        await tx.pendingRegistration.deleteMany({ where: { id: pending.id } });
+        return { ok: false as const, message: "这个邮箱已经注册，请直接登录。" };
+      }
+      throw error;
+    }
+
+    return { ok: true as const, message: "邮箱验证完成，账户已创建，现在可以登录。" };
+  });
 }
 
 export async function consumePasswordResetToken(token: string) {
