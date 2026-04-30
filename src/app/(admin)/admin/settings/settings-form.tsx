@@ -16,6 +16,10 @@ import {
 } from "@/actions/admin/settings";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  booleanAppSettingLabels,
+  type BooleanAppSettingField,
+} from "@/lib/domain-labels";
 
 interface AppConfig {
   siteName: string;
@@ -72,23 +76,9 @@ interface CouponOption {
 
 const selectClassName = "premium-input w-full appearance-none px-3.5 py-2 text-sm outline-none";
 
-type ToggleValues = Record<BooleanSettingField, boolean>;
+type ToggleValues = Record<BooleanAppSettingField, boolean>;
 
-const booleanSettingLabels: Record<BooleanSettingField, string> = {
-  allowRegistration: "开放注册",
-  emailVerificationRequired: "注册邮箱验证",
-  requireInviteCode: "邀请码注册",
-  autoReminderDispatchEnabled: "自动提醒派发",
-  trafficSyncEnabled: "3x-ui 流量定时同步",
-  networkRecommendationsEnabled: "三网推荐",
-  networkInsightsEnabled: "线路体验",
-  subscriptionRiskEnabled: "风控总控",
-  subscriptionRiskAutoSuspend: "自动暂停",
-  nodeAccessRiskEnabled: "节点日志风控",
-  inviteRewardEnabled: "自动发放奖励",
-  smtpEnabled: "邮件服务",
-  smtpSecure: "SSL 直连",
-};
+const booleanSettingLabels = booleanAppSettingLabels;
 
 function initialToggleValues(config: AppConfig): ToggleValues {
   return {

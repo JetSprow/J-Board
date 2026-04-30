@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { actorFromSession, recordAuditLog } from "@/services/audit";
 import { createPanelAdapter } from "@/services/node-panel/factory";
+import { getUserStatusLabel } from "@/lib/domain-labels";
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -86,7 +87,7 @@ export async function updateUserStatus(id: string, status: "ACTIVE" | "DISABLED"
     targetType: "User",
     targetId: user.id,
     targetLabel: user.email,
-    message: `将用户 ${user.email} 状态改为 ${status}`,
+    message: `将用户 ${user.email} 状态改为${getUserStatusLabel(status)}`,
   });
   revalidatePath("/admin/users");
   revalidatePath(`/admin/users/${user.id}`);
@@ -291,7 +292,7 @@ export async function batchUpdateUserStatus(formData: FormData) {
     actor: actorFromSession(session),
     action: "user.batch_status",
     targetType: "User",
-    message: `批量更新 ${userIds.length} 个用户状态为 ${status}`,
+    message: `批量更新 ${userIds.length} 个用户状态为${getUserStatusLabel(String(status))}`,
     metadata: {
       userIds,
       status: String(status),

@@ -18,7 +18,7 @@ export async function getPaymentAdapter(provider: string): Promise<PaymentAdapte
   });
 
   if (!config || !config.enabled) {
-    throw new Error(`Payment provider "${provider}" is not configured or disabled`);
+    throw new Error(`${getPaymentProviderName(realProvider)}未配置或未启用`);
   }
 
   const cfg = parsePaymentConfig(
@@ -34,7 +34,7 @@ export async function getPaymentAdapter(provider: string): Promise<PaymentAdapte
     case "usdt_trc20":
       return new UsdtTrc20Adapter(cfg as UsdtTrc20Config);
     default:
-      throw new Error(`Unknown payment provider: ${provider}`);
+      throw new Error("未知支付方式");
   }
 }
 

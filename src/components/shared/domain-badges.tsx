@@ -1,85 +1,37 @@
 import type {
   AnnouncementAudience,
-  AnnouncementDisplayType,
-  OrderKind,
   OrderReviewStatus,
   OrderStatus,
   Role,
   SubscriptionStatus,
   SubscriptionType,
-  TaskKind,
   TaskStatus,
   UserStatus,
 } from "@prisma/client";
 import { StatusBadge, type StatusTone } from "@/components/shared/status-badge";
+import {
+  orderReviewStatusLabels,
+  orderStatusLabels,
+  subscriptionStatusLabels,
+  subscriptionTypeLabels,
+  taskStatusLabels,
+  userRoleLabels,
+  userStatusLabels,
+} from "@/lib/domain-labels";
 
-export const orderStatusLabels: Record<OrderStatus, string> = {
-  PENDING: "待确认",
-  PAID: "已支付",
-  CANCELLED: "已取消",
-  REFUNDED: "已退款",
-};
-
-export const orderKindLabels: Record<OrderKind, string> = {
-  NEW_PURCHASE: "新购",
-  RENEWAL: "续费",
-  TRAFFIC_TOPUP: "增流量",
-};
-
-export const orderReviewStatusLabels: Record<OrderReviewStatus, string> = {
-  NORMAL: "正常",
-  FLAGGED: "异常",
-  RESOLVED: "已解决",
-};
-
-export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
-  ACTIVE: "活跃",
-  EXPIRED: "已过期",
-  CANCELLED: "已取消",
-  SUSPENDED: "已暂停",
-};
-
-export const subscriptionTypeLabels: Record<SubscriptionType, string> = {
-  PROXY: "代理",
-  STREAMING: "流媒体",
-};
-
-export const userRoleLabels: Record<Role, string> = {
-  ADMIN: "管理员",
-  USER: "用户",
-};
-
-export const userStatusLabels: Record<UserStatus, string> = {
-  ACTIVE: "正常",
-  PENDING_EMAIL: "待邮箱验证",
-  DISABLED: "禁用",
-  BANNED: "封禁",
-};
-
-export const taskKindLabels: Record<TaskKind, string> = {
-  REMINDER_DISPATCH: "提醒派发",
-  ORDER_PROVISION_RETRY: "订单重试",
-};
-
-export const taskStatusLabels: Record<TaskStatus, string> = {
-  PENDING: "待执行",
-  RUNNING: "运行中",
-  SUCCESS: "成功",
-  FAILED: "失败",
-};
-
-export const announcementAudienceLabels: Record<AnnouncementAudience, string> = {
-  PUBLIC: "公开",
-  USERS: "全部用户",
-  ADMINS: "全部管理员",
-  SPECIFIC_USER: "指定用户",
-};
-
-export const announcementDisplayTypeLabels: Record<AnnouncementDisplayType, string> = {
-  INLINE: "普通公告",
-  BIG: "大公告",
-  POPUP: "弹窗公告",
-};
+export {
+  announcementAudienceLabels,
+  announcementDisplayTypeLabels,
+  orderKindLabels,
+  orderReviewStatusLabels,
+  orderStatusLabels,
+  subscriptionStatusLabels,
+  subscriptionTypeLabels,
+  taskKindLabels,
+  taskStatusLabels,
+  userRoleLabels,
+  userStatusLabels,
+} from "@/lib/domain-labels";
 
 export function getOrderStatusTone(status: OrderStatus): StatusTone {
   if (status === "PAID") return "success";

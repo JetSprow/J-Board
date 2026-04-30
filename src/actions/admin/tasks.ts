@@ -7,6 +7,7 @@ import { dispatchSubscriptionReminders } from "@/services/notifications";
 import { confirmPendingOrder } from "@/services/payment/process";
 import { runTask, updateTaskRun } from "@/services/task-center";
 import { prisma } from "@/lib/prisma";
+import { getTaskKindLabel } from "@/lib/domain-labels";
 
 function revalidateTaskViews() {
   revalidatePath("/admin/tasks");
@@ -37,7 +38,7 @@ export async function runReminderTask() {
     action: "task.run",
     targetType: "TaskRun",
     targetId: outcome.taskId,
-    targetLabel: "REMINDER_DISPATCH",
+    targetLabel: getTaskKindLabel("REMINDER_DISPATCH"),
     message: "手动执行提醒派发任务",
   });
 
@@ -82,7 +83,7 @@ export async function retryTaskRun(taskId: string) {
       action: "task.retry",
       targetType: "TaskRun",
       targetId: task.id,
-      targetLabel: task.kind,
+      targetLabel: getTaskKindLabel(task.kind),
       message: `重试任务 ${task.title}`,
     });
   } catch (error) {

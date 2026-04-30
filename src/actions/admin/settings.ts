@@ -11,24 +11,15 @@ import { normalizeSiteUrl } from "@/services/site-url";
 import { encrypt, isEncryptedValue } from "@/lib/crypto";
 import { getErrorMessage } from "@/lib/errors";
 import { sendSmtpTestEmail } from "@/services/email";
+import {
+  booleanAppSettingFields,
+  getBooleanAppSettingLabel,
+  type BooleanAppSettingField,
+} from "@/lib/domain-labels";
 
-const booleanSettingFields = [
-  "allowRegistration",
-  "emailVerificationRequired",
-  "requireInviteCode",
-  "autoReminderDispatchEnabled",
-  "trafficSyncEnabled",
-  "networkRecommendationsEnabled",
-  "networkInsightsEnabled",
-  "subscriptionRiskEnabled",
-  "subscriptionRiskAutoSuspend",
-  "nodeAccessRiskEnabled",
-  "inviteRewardEnabled",
-  "smtpEnabled",
-  "smtpSecure",
-] as const;
+const booleanSettingFields = booleanAppSettingFields;
 
-export type BooleanSettingField = (typeof booleanSettingFields)[number];
+export type BooleanSettingField = BooleanAppSettingField;
 
 const settingsSchema = z.object({
   siteName: z.string().trim().min(1, "站点名称不能为空"),
@@ -363,7 +354,7 @@ export async function saveBooleanAppSetting(input: {
       targetType: "AppConfig",
       targetId: current.id,
       targetLabel: current.siteName,
-      message: `${parsed.value ? "开启" : "关闭"}系统开关 ${parsed.field}`,
+      message: `${parsed.value ? "开启" : "关闭"}${getBooleanAppSettingLabel(parsed.field)}开关`,
     });
 
     revalidateSettingsViews();

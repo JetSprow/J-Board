@@ -200,7 +200,7 @@ export function parsePaymentConfig(
   const schema = paymentConfigSchemas[provider as keyof typeof paymentConfigSchemas];
 
   if (!schema) {
-    throw new Error(`未知支付方式：${provider}`);
+    throw new Error("未知支付方式");
   }
 
   return schema.parse(normalized);

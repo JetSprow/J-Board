@@ -9,6 +9,13 @@ import {
   DataTableHeaderRow,
   DataTableRow,
 } from "@/components/shared/data-table";
+import {
+  formatAuditAction,
+  formatAuditActorRole,
+  formatAuditMessage,
+  formatAuditTargetLabel,
+  formatAuditTargetType,
+} from "@/lib/audit-display";
 import { formatDate } from "@/lib/utils";
 
 export function AuditLogsTable({ logs }: { logs: AuditLog[] }) {
@@ -37,20 +44,22 @@ export function AuditLogsTable({ logs }: { logs: AuditLog[] }) {
               <DataTableCell>
                 <div className="space-y-1">
                   <p>{log.actorEmail || "系统"}</p>
-                  <p className="text-xs text-muted-foreground">{log.actorRole || "—"}</p>
+                  <p className="text-xs text-muted-foreground">{formatAuditActorRole(log.actorRole)}</p>
                 </div>
               </DataTableCell>
-              <DataTableCell className="whitespace-nowrap font-medium">{log.action}</DataTableCell>
+              <DataTableCell className="whitespace-nowrap font-medium">
+                {formatAuditAction(log.action)}
+              </DataTableCell>
               <DataTableCell>
                 <div className="space-y-1">
-                  <p>{log.targetType}</p>
+                  <p>{formatAuditTargetType(log.targetType)}</p>
                   <p className="text-xs text-muted-foreground">
-                    {log.targetLabel || log.targetId || "—"}
+                    {formatAuditTargetLabel(log)}
                   </p>
                 </div>
               </DataTableCell>
               <DataTableCell className="max-w-xl whitespace-pre-wrap break-words text-muted-foreground">
-                {log.message}
+                {formatAuditMessage(log.message)}
               </DataTableCell>
             </DataTableRow>
           ))}

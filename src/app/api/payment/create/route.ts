@@ -6,6 +6,7 @@ import { getPaymentAdapter } from "@/services/payment/factory";
 import { rateLimit } from "@/lib/rate-limit";
 import { getSiteBaseUrl } from "@/services/site-url";
 import { getActiveSubscriptionRiskRestriction } from "@/services/subscription-risk-review";
+import { getOrderStatusLabel } from "@/lib/domain-labels";
 import { v4 as uuidv4 } from "uuid";
 
 const createPaymentSchema = z.object({
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
     }
 
     if (order.status !== "PENDING") {
-      return jsonError(`订单当前状态为 ${order.status}，无法继续支付`, {
+      return jsonError(`订单当前状态为${getOrderStatusLabel(order.status)}，无法继续支付`, {
         status: 400,
       });
     }

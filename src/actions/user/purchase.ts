@@ -13,6 +13,7 @@ import {
   getPlanTrafficPoolState,
 } from "@/services/plan-traffic-pool";
 import { getPlanPurchasePrice, roundMoney } from "@/services/commerce";
+import { getSubscriptionTypeLabel } from "@/lib/domain-labels";
 
 async function assertNoPendingOrder(userId: string) {
   const pendingOrder = await prisma.order.findFirst({
@@ -133,7 +134,7 @@ export async function purchaseProxy(
     },
   });
 
-  if (plan.type !== "PROXY") throw new Error(`套餐类型不匹配：${plan.name} 是 ${plan.type}，不能作为代理套餐购买`);
+  if (plan.type !== "PROXY") throw new Error(`套餐类型不匹配：${plan.name} 是${getSubscriptionTypeLabel(plan.type)}，不能作为代理套餐购买`);
   if (!plan.isActive) throw new Error(`套餐已下架：${plan.name} 当前不可购买`);
 
   const price = getPlanPurchasePrice(plan, trafficGb);
@@ -213,7 +214,7 @@ export async function purchaseStreaming(planId: string): Promise<string> {
     where: { id: planId },
   });
 
-  if (plan.type !== "STREAMING") throw new Error(`套餐类型不匹配：${plan.name} 是 ${plan.type}，不能作为流媒体套餐购买`);
+  if (plan.type !== "STREAMING") throw new Error(`套餐类型不匹配：${plan.name} 是${getSubscriptionTypeLabel(plan.type)}，不能作为流媒体套餐购买`);
   if (!plan.isActive) throw new Error(`套餐已下架：${plan.name} 当前不可购买`);
 
   const availability = await getPlanAvailability(plan, { userId: session.user.id });

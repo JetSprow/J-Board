@@ -5,6 +5,7 @@ import { BatchActionBar, BatchActionButton } from "@/components/admin/batch-acti
 import { EmptyState } from "@/components/shared/page-shell";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getNodeStatusLabel } from "@/lib/domain-labels";
 import { InboundDeleteButton } from "../inbound-delete-button";
 import { InboundDisplayNameForm } from "../inbound-display-name-form";
 import { NodeActions } from "../node-actions";
@@ -52,7 +53,7 @@ function NodeCard({ node, siteUrl }: { node: NodeServerRow; siteUrl: string | nu
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge tone={node.status === "active" ? "success" : "neutral"}>
-            {node.status}
+            {getNodeStatusLabel(node.status)}
           </StatusBadge>
           <NodeForm
             node={{

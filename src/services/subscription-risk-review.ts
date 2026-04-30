@@ -6,6 +6,7 @@ import type {
 } from "@prisma/client";
 import { prisma, type DbClient } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
+import { getSubscriptionStatusLabel, getSubscriptionTypeLabel } from "@/lib/domain-labels";
 
 export const subscriptionRiskAccessLogSelect = {
   id: true,
@@ -370,7 +371,7 @@ export function buildSubscriptionRiskReport(input: {
   const { event, logs, user, subscription } = input;
   const summary = buildSubscriptionRiskGeoSummary(logs);
   const target = subscription
-    ? `${subscription.plan.name}（${subscription.plan.type}，当前状态：${subscription.status}）`
+    ? `${subscription.plan.name}（${getSubscriptionTypeLabel(subscription.plan.type)}，当前状态：${getSubscriptionStatusLabel(subscription.status)}）`
     : "用户总订阅";
   const userLabel = user ? `${user.email}${user.name ? `（${user.name}）` : ""}` : event.userId ?? "未知用户";
   const windowRange = `${formatDate(event.windowStartedAt)} 至 ${formatDate(event.createdAt)}`;

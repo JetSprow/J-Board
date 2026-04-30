@@ -60,13 +60,15 @@ export function TrafficTrendChart({
           <XAxis dataKey="date" />
           <YAxis unit=" GB" width={60} />
           <Tooltip
+            labelFormatter={(label) => `日期：${label}`}
             formatter={(value) =>
-              `${Number(typeof value === "number" ? value : 0).toFixed(2)} GB`
+              [`${Number(typeof value === "number" ? value : 0).toFixed(2)} GB`, "流量"]
             }
           />
           <Area
             type="monotone"
             dataKey="valueGb"
+            name="流量"
             stroke={color}
             fill={color}
             fillOpacity={0.15}

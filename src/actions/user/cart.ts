@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { buildUnavailableMessage, getPlanAvailability } from "@/services/plan-availability";
 import { getPlanPurchasePrice, calculateCheckoutDiscounts } from "@/services/commerce";
 import { ensurePlanTrafficPoolCapacity } from "@/services/plan-traffic-pool";
+import { getSubscriptionTypeLabel } from "@/lib/domain-labels";
 
 async function assertNoPendingOrder(userId: string) {
   const pendingOrder = await prisma.order.findFirst({
@@ -33,7 +34,7 @@ async function getProxyPlanForCart(planId: string) {
     },
   });
 
-  if (plan.type !== "PROXY") throw new Error(`套餐类型不匹配：${plan.name} 是 ${plan.type}，不能作为代理套餐加入购物车`);
+  if (plan.type !== "PROXY") throw new Error(`套餐类型不匹配：${plan.name} 是${getSubscriptionTypeLabel(plan.type)}，不能作为代理套餐加入购物车`);
   if (!plan.isActive) throw new Error(`套餐已下架：${plan.name} 当前不可购买`);
   return plan;
 }
@@ -115,7 +116,7 @@ export async function addProxyPlanToCart(
 export async function addStreamingPlanToCart(planId: string) {
   const session = await requireAuth();
   const plan = await prisma.subscriptionPlan.findUniqueOrThrow({ where: { id: planId } });
-  if (plan.type !== "STREAMING") throw new Error(`套餐类型不匹配：${plan.name} 是 ${plan.type}，不能作为流媒体套餐加入购物车`);
+  if (plan.type !== "STREAMING") throw new Error(`套餐类型不匹配：${plan.name} 是${getSubscriptionTypeLabel(plan.type)}，不能作为流媒体套餐加入购物车`);
   if (!plan.isActive) throw new Error(`套餐已下架：${plan.name} 当前不可购买`);
 
   const availability = await getPlanAvailability(plan, { userId: session.user.id });

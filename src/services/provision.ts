@@ -9,6 +9,7 @@ import { recordAuditLog } from "@/services/audit";
 import { createNotification } from "@/services/notifications";
 import { generateNodeClientCredential } from "@/services/node-client-credential";
 import { createPanelAdapter } from "@/services/node-panel/factory";
+import { getOrderKindLabel, getSubscriptionStatusLabel } from "@/lib/domain-labels";
 import type {
   NodeServer,
   Order,
@@ -42,7 +43,7 @@ export async function provisionSubscriptionWithDb(
     return applyTrafficTopup(order, db);
   }
 
-  throw new Error(`开通订阅失败：不支持的订单类型 ${String(order.kind)}`);
+  throw new Error(`开通订阅失败：不支持的订单类型${getOrderKindLabel(order.kind)}`);
 }
 
 async function getNewPurchaseItems(order: PaidOrder, db: DbClient): Promise<NewOrderItem[]> {
@@ -191,7 +192,7 @@ async function applyRenewal(order: PaidOrder, db: DbClient): Promise<string[]> {
     throw new Error("续费目标订阅与订单不匹配");
   }
   if (subscription.status !== "ACTIVE" || subscription.endDate <= new Date()) {
-    throw new Error(`续费失败：目标订阅状态为 ${subscription.status}，到期时间为 ${subscription.endDate.toISOString()}`);
+    throw new Error(`续费失败：目标订阅状态为${getSubscriptionStatusLabel(subscription.status)}，到期时间为 ${subscription.endDate.toISOString()}`);
   }
 
   const now = new Date();

@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { cancelOwnPendingOrder, resetOwnPendingPaymentChoice } from "@/actions/user/orders";
 import { fetchJson } from "@/lib/fetch-json";
 import { getErrorMessage } from "@/lib/errors";
+import { getOrderStatusLabel } from "@/lib/domain-labels";
 import type {
   OrderPaymentSnapshot,
   PaymentInfo,
@@ -111,7 +112,7 @@ export function usePaymentFlow(orderId: string) {
 
       if (order.status !== "PENDING") {
         setStatus("idle");
-        setPageError(`这笔订单当前为 ${order.status}，无法继续支付。`);
+        setPageError(`这笔订单当前为${getOrderStatusLabel(order.status)}，无法继续支付。`);
         return;
       }
 
@@ -161,7 +162,7 @@ export function usePaymentFlow(orderId: string) {
 
       setStatus("idle");
       setPageError(
-        result.error || `订单状态更新：${orderStatusLabel[result.status] ?? result.status}`,
+        result.error || `订单状态更新：${orderStatusLabel[result.status] ?? "未知状态"}`,
       );
     } catch (error) {
       setStatus("idle");

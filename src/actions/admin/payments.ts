@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/require-auth";
 import { revalidatePath } from "next/cache";
 import {
   decryptPaymentConfigForUse,
+  getPaymentProviderName,
   normalizePaymentConfig,
   parsePaymentConfig,
   preparePaymentConfigForStorage,
@@ -54,8 +55,8 @@ export async function savePaymentConfig(
     action: "payment.config",
     targetType: "PaymentConfig",
     targetId: provider,
-    targetLabel: provider,
-    message: `${enabled ? "启用并更新" : "更新"}支付配置 ${provider}`,
+    targetLabel: getPaymentProviderName(provider),
+    message: `${enabled ? "启用并更新" : "更新"}支付配置 ${getPaymentProviderName(provider)}`,
   });
   revalidatePath("/admin/payments");
 }

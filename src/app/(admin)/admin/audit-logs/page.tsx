@@ -4,6 +4,7 @@ import { AdminFilterBar } from "@/components/admin/filter-bar";
 import { PageHeader, PageShell } from "@/components/shared/page-shell";
 import { Pagination } from "@/components/shared/pagination";
 import { buttonVariants } from "@/components/ui/button";
+import { auditActionFilterOptions } from "@/lib/audit-display";
 import { AuditLogsTable } from "./_components/audit-logs-table";
 import { buildAuditLogExportHref, getAuditLogs } from "./audit-logs-data";
 
@@ -42,17 +43,7 @@ export default async function AuditLogsPage({
           {
             name: "action",
             value: filters.action,
-            options: [
-              { label: "全部动作前缀", value: "" },
-              { label: "user.", value: "user." },
-              { label: "order.", value: "order." },
-              { label: "subscription.", value: "subscription." },
-              { label: "plan.", value: "plan." },
-              { label: "service.", value: "service." },
-              { label: "node.", value: "node." },
-              { label: "task.", value: "task." },
-              { label: "risk.", value: "risk." },
-            ],
+            options: auditActionFilterOptions,
           },
         ]}
       />

@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleDot } from "lucide-react";
+import { formatAuditAction, formatAuditMessage } from "@/lib/audit-display";
 
 interface TimelineItem {
   id: string;
@@ -28,11 +29,11 @@ export function SubscriptionTimeline({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-pretty">{item.message}</p>
+              <p className="text-sm font-semibold text-pretty">{formatAuditMessage(item.message)}</p>
               <span className="shrink-0 text-xs text-muted-foreground">{item.createdAt}</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {item.action}
+              {formatAuditAction(item.action)}
               {item.actorEmail ? ` · ${item.actorEmail}` : " · 系统"}
             </p>
           </div>

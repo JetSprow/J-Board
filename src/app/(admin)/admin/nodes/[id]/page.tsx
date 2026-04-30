@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/shared/page-shell";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { buttonVariants } from "@/components/ui/button";
+import { getNodeStatusLabel } from "@/lib/domain-labels";
 import { getNodeDetail } from "./node-detail-data";
 import { NodeDetailTabs } from "./_components/node-detail-tabs";
 
@@ -34,7 +35,7 @@ export default async function NodeDetailPage({
           description={`3x-ui · ${node.panelUrl || "未配置面板"}`}
           actions={
             <StatusBadge tone={node.status === "active" ? "success" : "neutral"}>
-              {node.status}
+              {getNodeStatusLabel(node.status)}
             </StatusBadge>
           }
           className="flex-1"

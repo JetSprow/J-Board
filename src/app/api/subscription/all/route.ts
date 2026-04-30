@@ -12,6 +12,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { getClientRequestContext } from "@/lib/request-context";
 import { recordSubscriptionAccess } from "@/services/subscription-risk";
 import { getAppConfig } from "@/services/app-config";
+import { getUserStatusLabel } from "@/lib/domain-labels";
 
 const SUBSCRIPTION_RATE_WINDOW_SECONDS = 60 * 60;
 
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
         allowed: false,
         reason: "rate_limited",
       });
-      return jsonError("Too many subscription requests", 429);
+      return jsonError("订阅请求过于频繁，请稍后再试", 429);
     }
   }
 
@@ -87,7 +88,7 @@ export async function GET(req: Request) {
         allowed: false,
         reason: "rate_limited",
       });
-      return jsonError("Too many subscription requests", 429);
+      return jsonError("订阅请求过于频繁，请稍后再试", 429);
     }
   }
 
@@ -99,7 +100,7 @@ export async function GET(req: Request) {
       allowed: false,
       reason: "user_inactive",
     });
-    return jsonError("User inactive", 403);
+    return jsonError(`账户当前状态为${getUserStatusLabel(user.status)}，暂时无法拉取总订阅`, 403);
   }
 
   const risk = await recordSubscriptionAccess({
@@ -111,7 +112,7 @@ export async function GET(req: Request) {
   });
 
   if (risk.suspended) {
-    return jsonError("Subscriptions suspended by risk control", 403);
+    return jsonError("总订阅已被风控暂停，请联系管理员处理", 403);
   }
 
   const format = resolveSubscriptionFormat(url.searchParams, req.headers.get("user-agent"));
