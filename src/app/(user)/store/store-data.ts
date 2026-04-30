@@ -28,7 +28,7 @@ export async function getStorePageData(userId?: string) {
         })
       : null,
   ]);
-  const latencyRecommendations = config.networkInsightsEnabled
+  const latencyRecommendations = config.networkRecommendationsEnabled
     ? await getLatencyRecommendations()
     : [];
 
@@ -43,6 +43,7 @@ export async function getStorePageData(userId?: string) {
   return {
     plans,
     availabilityMap,
+    networkRecommendationsEnabled: config.networkRecommendationsEnabled,
     networkInsightsEnabled: config.networkInsightsEnabled,
     latencyRecommendations,
     pendingOrder: pendingOrder

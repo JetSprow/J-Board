@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const { nodeId } = auth;
   const config = await getAppConfig();
 
-  if (!config.networkInsightsEnabled) {
+  if (!config.networkRecommendationsEnabled && !config.networkInsightsEnabled) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
@@ -54,9 +54,11 @@ export async function POST(req: Request) {
       },
     });
 
-    await prisma.nodeLatencyLog.create({
-      data: { nodeId, carrier: entry.carrier, latencyMs },
-    });
+    if (config.networkInsightsEnabled) {
+      await prisma.nodeLatencyLog.create({
+        data: { nodeId, carrier: entry.carrier, latencyMs },
+      });
+    }
   }
 
   return NextResponse.json({ ok: true });

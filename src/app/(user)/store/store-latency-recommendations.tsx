@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Activity, Clock3, RadioTower, RefreshCw, Sparkles } from "lucide-react";
 import { fetchJson } from "@/lib/fetch-json";
@@ -18,6 +17,7 @@ interface RecommendationPayload {
 }
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+export const OPEN_PROXY_PLAN_EVENT = "jboard:open-proxy-plan";
 
 function formatTime(value: string | null) {
   if (!value) return "等待刷新";
@@ -32,6 +32,14 @@ function getLatencyTone(latencyMs?: number) {
   if (latencyMs <= 80) return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
   if (latencyMs <= 150) return "border-primary/20 bg-primary/10 text-primary";
   return "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+}
+
+function openRecommendedPlan(planId: string) {
+  window.dispatchEvent(
+    new CustomEvent(OPEN_PROXY_PLAN_EVENT, {
+      detail: { planId },
+    }),
+  );
 }
 
 export function StoreLatencyRecommendations({
@@ -96,10 +104,16 @@ export function StoreLatencyRecommendations({
         {RECOMMENDATION_CARRIERS.map((carrier) => {
           const item = itemMap.get(carrier);
           return (
-            <div
+            <button
               key={carrier}
+              type="button"
+              disabled={!item}
+              onClick={() => {
+                if (item) openRecommendedPlan(item.planId);
+              }}
               className={cn(
-                "rounded-xl border p-4 transition-colors duration-200",
+                "rounded-xl border p-4 text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-default",
+                item && "hover:border-primary/25 hover:bg-primary/7",
                 getLatencyTone(item?.latencyMs),
               )}
             >
@@ -120,17 +134,16 @@ export function StoreLatencyRecommendations({
                     <p className="text-lg font-semibold tracking-[-0.04em] text-foreground">{item.nodeName}</p>
                     <p className="mt-1 truncate text-xs text-muted-foreground">{item.planName}</p>
                   </div>
-                  <Link
-                    href={`#plan-${item.planId}`}
+                  <span
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
                   >
-                    <Activity className="size-3.5" /> 查看套餐
-                  </Link>
+                    <Activity className="size-3.5" /> 查看详情与购买
+                  </span>
                 </div>
               ) : (
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">正在采集这个运营商的延迟数据。</p>
               )}
-            </div>
+            </button>
           );
         })}
       </div>

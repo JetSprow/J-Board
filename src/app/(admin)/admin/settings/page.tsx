@@ -37,6 +37,7 @@ export default async function AdminSettingsPage() {
           reminderDispatchIntervalMinutes: config.reminderDispatchIntervalMinutes,
           trafficSyncEnabled: config.trafficSyncEnabled,
           trafficSyncIntervalSeconds: config.trafficSyncIntervalSeconds,
+          networkRecommendationsEnabled: config.networkRecommendationsEnabled,
           networkInsightsEnabled: config.networkInsightsEnabled,
           subscriptionRiskEnabled: config.subscriptionRiskEnabled,
           subscriptionRiskAutoSuspend: config.subscriptionRiskAutoSuspend,

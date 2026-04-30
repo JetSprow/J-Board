@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gauge, Network, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StorePlanHeader } from "./plan-card-parts";
 import { PlanAvailabilityBadges } from "./plan-availability-badges";
 import { ProxyDetailDialog } from "./proxy-detail-dialog";
+import { OPEN_PROXY_PLAN_EVENT } from "./store-latency-recommendations";
 import type { ProxyPlan } from "./proxy-plan-types";
 
 interface Props {
@@ -18,6 +19,18 @@ export function ProxyPlanCard({ plan, networkInsightsEnabled }: Props) {
   const hasInboundOptions = plan.inboundOptions.length > 0;
   const isFixedPackage = plan.pricingMode === "FIXED_PACKAGE";
   const displayPrice = isFixedPackage ? (plan.fixedPrice ?? 0) : plan.pricePerGb;
+
+  useEffect(() => {
+    function handleOpen(event: Event) {
+      if (!(event instanceof CustomEvent)) return;
+      if (event.detail?.planId === plan.id) {
+        setDialogOpen(true);
+      }
+    }
+
+    window.addEventListener(OPEN_PROXY_PLAN_EVENT, handleOpen);
+    return () => window.removeEventListener(OPEN_PROXY_PLAN_EVENT, handleOpen);
+  }, [plan.id]);
 
   return (
     <>

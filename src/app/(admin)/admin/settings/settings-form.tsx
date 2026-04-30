@@ -26,6 +26,7 @@ interface AppConfig {
   reminderDispatchIntervalMinutes: number;
   trafficSyncEnabled: boolean;
   trafficSyncIntervalSeconds: number;
+  networkRecommendationsEnabled: boolean;
   networkInsightsEnabled: boolean;
   subscriptionRiskEnabled: boolean;
   subscriptionRiskAutoSuspend: boolean;
@@ -252,7 +253,22 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
         </div>
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="networkInsightsEnabled">三网推荐与线路体验</Label>
+            <Label htmlFor="networkRecommendationsEnabled">三网推荐</Label>
+            <select
+              id="networkRecommendationsEnabled"
+              name="networkRecommendationsEnabled"
+              defaultValue={String(config.networkRecommendationsEnabled)}
+              className={selectClassName}
+            >
+              <option value="false">关闭</option>
+              <option value="true">开启</option>
+            </select>
+            <p className="text-xs leading-5 text-muted-foreground">
+              开启后，商城展示电信、联通、移动当前最低延迟推荐；点击推荐会直接打开对应套餐详情。
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="networkInsightsEnabled">线路体验</Label>
             <select
               id="networkInsightsEnabled"
               name="networkInsightsEnabled"
@@ -263,7 +279,7 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
               <option value="true">开启</option>
             </select>
             <p className="text-xs leading-5 text-muted-foreground">
-              开启后，用户侧商城展示三网推荐、节点延迟、趋势和访问路径；关闭后只保留购买所需的线路入口选择。
+              开启后，套餐详情展示节点延迟、趋势和访问路径；关闭后只保留购买所需的线路入口选择。
             </p>
           </div>
         </div>

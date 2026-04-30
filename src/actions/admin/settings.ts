@@ -27,6 +27,7 @@ const settingsSchema = z.object({
   reminderDispatchIntervalMinutes: z.coerce.number().int().positive().optional(),
   trafficSyncEnabled: z.string().optional(),
   trafficSyncIntervalSeconds: z.coerce.number().int().min(10).optional(),
+  networkRecommendationsEnabled: z.string().optional(),
   networkInsightsEnabled: z.string().optional(),
   subscriptionRiskEnabled: z.string().optional(),
   subscriptionRiskAutoSuspend: z.string().optional(),
@@ -138,6 +139,10 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
     trafficSyncEnabled: optionalBoolean(parsed.trafficSyncEnabled, current.trafficSyncEnabled),
     trafficSyncIntervalSeconds:
       parsed.trafficSyncIntervalSeconds ?? current.trafficSyncIntervalSeconds,
+    networkRecommendationsEnabled: optionalBoolean(
+      parsed.networkRecommendationsEnabled,
+      current.networkRecommendationsEnabled,
+    ),
     networkInsightsEnabled: optionalBoolean(
       parsed.networkInsightsEnabled,
       current.networkInsightsEnabled,

@@ -4,7 +4,7 @@ import { getAppConfig } from "@/services/app-config";
 
 export async function GET() {
   const config = await getAppConfig();
-  if (!config.networkInsightsEnabled) {
+  if (!config.networkRecommendationsEnabled) {
     return NextResponse.json({
       items: [],
       updatedAt: new Date().toISOString(),

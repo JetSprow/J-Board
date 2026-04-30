@@ -30,7 +30,14 @@ export const metadata: Metadata = {
 
 export default async function StorePage() {
   const session = await getActiveSession();
-  const { plans, availabilityMap, pendingOrder, networkInsightsEnabled, latencyRecommendations } = await getStorePageData(session?.user.id);
+  const {
+    plans,
+    availabilityMap,
+    pendingOrder,
+    networkRecommendationsEnabled,
+    networkInsightsEnabled,
+    latencyRecommendations,
+  } = await getStorePageData(session?.user.id);
   const proxyPlans = getProxyPlans(plans);
   const streamingPlans = getStreamingPlans(plans);
   const proxyCards = sortPlansForDisplay(proxyPlans.map((plan) => toProxyPlanCard(plan, availabilityMap.get(plan.id))));
@@ -77,7 +84,7 @@ export default async function StorePage() {
 
       <PendingOrderBanner order={pendingOrder} />
 
-      {networkInsightsEnabled && proxyCards.length > 0 && (
+      {networkRecommendationsEnabled && proxyCards.length > 0 && (
         <StoreLatencyRecommendations initialItems={latencyRecommendations} />
       )}
 
