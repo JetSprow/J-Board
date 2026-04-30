@@ -17,6 +17,7 @@ export function SiteFooter({ className }: { className?: string }) {
         </span>
         <span className="font-mono text-[0.72rem] text-muted-foreground">v{PRODUCT_VERSION}</span>
       </div>
+      <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
       <ThemeToggle className="size-7 rounded-md border-transparent bg-transparent" />
       <span className="h-1 w-1 rounded-full bg-muted-foreground/30" aria-hidden />
       <a
