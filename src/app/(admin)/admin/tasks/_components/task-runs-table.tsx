@@ -1,6 +1,7 @@
 import { batchRetryTaskRuns, retryTaskRun } from "@/actions/admin/tasks";
 import { BatchActionBar, BatchActionButton } from "@/components/admin/batch-action-bar";
 import { DataTableShell } from "@/components/admin/data-table-shell";
+import { LogDeleteButton } from "@/components/admin/log-delete-button";
 import {
   DataTable,
   DataTableBody,
@@ -77,7 +78,7 @@ export function TaskRunsTable({ tasks }: TaskRunsTableProps) {
                 {task.errorMessage || "—"}
               </DataTableCell>
               <DataTableCell>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
                   {task.retryable && task.status === "FAILED" && (
                     <form
                       action={async () => {
@@ -88,6 +89,13 @@ export function TaskRunsTable({ tasks }: TaskRunsTableProps) {
                       <PendingSubmitButton size="sm" variant="outline" pendingLabel="重试中...">重试</PendingSubmitButton>
                     </form>
                   )}
+                  <LogDeleteButton
+                    id={task.id}
+                    target="TASK_RUNS"
+                    title="删除这条任务记录？"
+                    description="删除后无法恢复，只会移除任务执行记录，不会撤销任务已经产生的业务结果。"
+                    successMessage="任务记录已删除"
+                  />
                 </div>
               </DataTableCell>
             </DataTableRow>

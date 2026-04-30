@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronDown, Clock3, Gift, LifeBuoy, Mail, RadioTower, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Bell, ChevronDown, Clock3, Gift, LifeBuoy, Mail, RadioTower, Send, Settings2, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
+import { cleanupExpiredAdminLogs } from "@/actions/admin/logs";
+import { ConfirmActionButton } from "@/components/shared/confirm-action-button";
 import { BooleanToggle } from "@/components/ui/boolean-toggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +18,12 @@ import {
 } from "@/actions/admin/settings";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
+import { formatDate } from "@/lib/utils";
 import {
   booleanAppSettingLabels,
   type BooleanAppSettingField,
 } from "@/lib/domain-labels";
+import type { LogCleanupTarget } from "@/services/log-cleanup";
 
 interface AppConfig {
   siteName: string;
@@ -36,6 +40,9 @@ interface AppConfig {
   reminderDispatchIntervalMinutes: number;
   trafficSyncEnabled: boolean;
   trafficSyncIntervalSeconds: number;
+  logCleanupEnabled: boolean;
+  logRetentionDays: number;
+  logCleanupLastRunAt: Date | string | null;
   networkRecommendationsEnabled: boolean;
   networkInsightsEnabled: boolean;
   subscriptionRiskEnabled: boolean;
@@ -76,6 +83,16 @@ interface CouponOption {
 
 const selectClassName = "premium-input w-full appearance-none px-3.5 py-2 text-sm outline-none";
 
+const logCleanupTargetOptions = [
+  { value: "ALL", label: "全部日志" },
+  { value: "AUDIT_LOGS", label: "审计日志" },
+  { value: "TASK_RUNS", label: "任务记录" },
+  { value: "TRAFFIC_LOGS", label: "流量日志" },
+  { value: "NODE_LATENCY_LOGS", label: "节点延迟日志" },
+  { value: "SUBSCRIPTION_ACCESS_LOGS", label: "风控访问日志" },
+  { value: "SUBSCRIPTION_RISK_EVENTS", label: "风控事件" },
+] satisfies Array<{ value: LogCleanupTarget; label: string }>;
+
 type ToggleValues = Record<BooleanAppSettingField, boolean>;
 
 const booleanSettingLabels = booleanAppSettingLabels;
@@ -87,6 +104,7 @@ function initialToggleValues(config: AppConfig): ToggleValues {
     requireInviteCode: config.requireInviteCode,
     autoReminderDispatchEnabled: config.autoReminderDispatchEnabled,
     trafficSyncEnabled: config.trafficSyncEnabled,
+    logCleanupEnabled: config.logCleanupEnabled,
     networkRecommendationsEnabled: config.networkRecommendationsEnabled,
     networkInsightsEnabled: config.networkInsightsEnabled,
     subscriptionRiskEnabled: config.subscriptionRiskEnabled,
@@ -102,6 +120,9 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
+  const [cleaningLogs, setCleaningLogs] = useState(false);
+  const [cleanupTarget, setCleanupTarget] = useState<LogCleanupTarget>("ALL");
+  const [manualCleanupDays, setManualCleanupDays] = useState(config.logRetentionDays);
   const [riskSettingsOpen, setRiskSettingsOpen] = useState(false);
   const [toggleValues, setToggleValues] = useState<ToggleValues>(() => initialToggleValues(config));
   const [pendingToggles, setPendingToggles] = useState<Partial<Record<BooleanSettingField, boolean>>>({});
@@ -225,6 +246,24 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
     }
   }
 
+  async function handleCleanupExpiredLogs() {
+    if (cleaningLogs) return;
+
+    const cutoffDays = Math.min(3650, Math.max(1, Math.trunc(Number(manualCleanupDays) || config.logRetentionDays || 30)));
+    setCleaningLogs(true);
+    try {
+      const result = await cleanupExpiredAdminLogs({ target: cleanupTarget, cutoffDays });
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+      setManualCleanupDays(cutoffDays);
+      router.refresh();
+      toast.success(`日志清理完成：${result.message}`);
+    } finally {
+      setCleaningLogs(false);
+    }
+  }
+
   function clearPasswordField(form: HTMLFormElement) {
     const password = form.elements.namedItem("smtpPassword");
     if (password instanceof HTMLInputElement) {
@@ -328,6 +367,84 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
             />
             <p className="text-xs leading-5 text-muted-foreground">进程级后台定时任务，默认 60 秒；建议不要低于 10 秒。</p>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Trash2 className="size-4 text-primary" /> 日志清理
+        </div>
+        <p className="text-xs leading-5 text-muted-foreground">
+          自动清理每天最多执行一次，默认保留 30 天日志；正在生效的用户端风控限制不会被自动清理。
+        </p>
+        <div className="grid gap-5 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="logCleanupEnabled">自动清理日志</Label>
+            {renderImmediateToggle("logCleanupEnabled", { id: "logCleanupEnabled" })}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="logRetentionDays">自动保留天数</Label>
+            <Input
+              id="logRetentionDays"
+              name="logRetentionDays"
+              type="number"
+              min={1}
+              max={3650}
+              step={1}
+              defaultValue={config.logRetentionDays}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>上次清理</Label>
+            <div className="flex min-h-10 items-center rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
+              {config.logCleanupLastRunAt ? formatDate(config.logCleanupLastRunAt) : "尚未执行"}
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-border/60 pt-4">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_12rem_auto] lg:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="manualCleanupTarget">手动清理范围</Label>
+              <select
+                id="manualCleanupTarget"
+                value={cleanupTarget}
+                onChange={(event) => setCleanupTarget(event.target.value as LogCleanupTarget)}
+                className={selectClassName}
+              >
+                {logCleanupTargetOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="manualCleanupDays">清理几天前</Label>
+              <Input
+                id="manualCleanupDays"
+                type="number"
+                min={1}
+                max={3650}
+                step={1}
+                value={manualCleanupDays}
+                onChange={(event) => setManualCleanupDays(Number(event.target.value))}
+              />
+            </div>
+            <ConfirmActionButton
+              title="清理过期日志？"
+              description={`将删除 ${manualCleanupDays || config.logRetentionDays || 30} 天前的${logCleanupTargetOptions.find((option) => option.value === cleanupTarget)?.label ?? "日志"}。删除后无法恢复。`}
+              confirmLabel="开始清理"
+              errorMessage="清理日志失败"
+              disabled={saving || hasPendingToggle || cleaningLogs}
+              onConfirm={handleCleanupExpiredLogs}
+            >
+              <Trash2 className="size-4" />
+              {cleaningLogs ? "清理中..." : "清理过期日志"}
+            </ConfirmActionButton>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            手动清理会按所选时间立即执行，并记录一条审计日志；风控事件中的用户端限制标记会被保留，除非你单独删除对应事件。
+          </p>
         </div>
       </section>
 

@@ -86,6 +86,7 @@ export const booleanAppSettingLabels = {
   requireInviteCode: "邀请码注册",
   autoReminderDispatchEnabled: "自动提醒派发",
   trafficSyncEnabled: "3x-ui 流量定时同步",
+  logCleanupEnabled: "自动清理日志",
   networkRecommendationsEnabled: "三网推荐",
   networkInsightsEnabled: "线路体验",
   subscriptionRiskEnabled: "订阅访问风控",

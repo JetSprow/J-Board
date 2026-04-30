@@ -1,4 +1,5 @@
 import { ChevronDown, Globe2, MapPin, ScrollText } from "lucide-react";
+import { LogDeleteButton } from "@/components/admin/log-delete-button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { WORLD_COUNTRY_PATHS } from "@/components/shared/world-map-paths";
 import { formatDate } from "@/lib/utils";
@@ -132,6 +133,13 @@ function AnalysisLogDetails({ summary }: { summary: SubscriptionRiskGeoSummary }
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                     <StatusBadge tone={log.source === "节点 Xray 日志" ? "info" : "neutral"}>{log.source}</StatusBadge>
                     <StatusBadge tone={log.allowed ? "success" : "warning"}>{log.allowed ? "放行" : "拦截"}</StatusBadge>
+                    <LogDeleteButton
+                      id={log.id}
+                      target="SUBSCRIPTION_ACCESS_LOGS"
+                      title="删除这条风控访问日志？"
+                      description="删除后无法恢复，只会移除这条访问或节点连接证据，不会删除用户、订阅或风控事件。"
+                      successMessage="风控访问日志已删除"
+                    />
                   </div>
                 </div>
                 <p className="mt-2 break-words text-xs leading-5 text-muted-foreground">{log.location}</p>

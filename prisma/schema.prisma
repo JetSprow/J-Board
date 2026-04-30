@@ -786,6 +786,9 @@ model AppConfig {
   reminderDispatchIntervalMinutes   Int      @default(60)
   trafficSyncEnabled                Boolean  @default(true)
   trafficSyncIntervalSeconds        Int      @default(60)
+  logCleanupEnabled                 Boolean  @default(true)
+  logRetentionDays                  Int      @default(30)
+  logCleanupLastRunAt               DateTime?
   networkRecommendationsEnabled     Boolean  @default(false)
   networkInsightsEnabled            Boolean  @default(false)
   subscriptionRiskEnabled           Boolean  @default(true)

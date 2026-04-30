@@ -36,6 +36,8 @@ const settingsSchema = z.object({
   reminderDispatchIntervalMinutes: z.coerce.number().int().positive().optional(),
   trafficSyncEnabled: z.string().optional(),
   trafficSyncIntervalSeconds: z.coerce.number().int().min(10).optional(),
+  logCleanupEnabled: z.string().optional(),
+  logRetentionDays: z.coerce.number().int().min(1).max(3650).optional(),
   networkRecommendationsEnabled: z.string().optional(),
   networkInsightsEnabled: z.string().optional(),
   subscriptionRiskEnabled: z.string().optional(),
@@ -119,6 +121,7 @@ function booleanSettingData(field: BooleanSettingField, value: boolean) {
     requireInviteCode: { requireInviteCode: value },
     autoReminderDispatchEnabled: { autoReminderDispatchEnabled: value },
     trafficSyncEnabled: { trafficSyncEnabled: value },
+    logCleanupEnabled: { logCleanupEnabled: value },
     networkRecommendationsEnabled: { networkRecommendationsEnabled: value },
     networkInsightsEnabled: { networkInsightsEnabled: value },
     subscriptionRiskEnabled: { subscriptionRiskEnabled: value },
@@ -189,6 +192,8 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
     trafficSyncEnabled: optionalBoolean(parsed.trafficSyncEnabled, current.trafficSyncEnabled),
     trafficSyncIntervalSeconds:
       parsed.trafficSyncIntervalSeconds ?? current.trafficSyncIntervalSeconds,
+    logCleanupEnabled: optionalBoolean(parsed.logCleanupEnabled, current.logCleanupEnabled),
+    logRetentionDays: parsed.logRetentionDays ?? current.logRetentionDays,
     networkRecommendationsEnabled: optionalBoolean(
       parsed.networkRecommendationsEnabled,
       current.networkRecommendationsEnabled,

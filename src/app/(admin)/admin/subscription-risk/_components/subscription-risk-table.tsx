@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { SubscriptionRiskEvent } from "@prisma/client";
 import { ChevronDown } from "lucide-react";
+import { LogDeleteButton } from "@/components/admin/log-delete-button";
 import {
   SubscriptionStatusBadge,
   SubscriptionTypeBadge,
@@ -249,6 +250,22 @@ function RiskEventCard({ event }: { event: SubscriptionRiskEventRow }) {
                 reportSentAt={event.reportSentAt}
                 userRestrictionActive={event.userRestrictionActive}
                 finalAction={event.finalAction}
+              />
+            </div>
+            <div className="border-t border-border/60 pt-4">
+              <LogDeleteButton
+                id={event.id}
+                target="SUBSCRIPTION_RISK_EVENTS"
+                label="删除事件"
+                title="删除这条风控事件？"
+                description={
+                  event.userRestrictionActive
+                    ? "删除后无法恢复。此事件当前仍有用户端限制标记，请先确认是否需要在处理动作里解除限制。"
+                    : "删除后无法恢复，只会移除这条风控事件，不会删除用户、订阅或访问日志。"
+                }
+                successMessage="风控事件已删除"
+                className="w-full justify-center text-destructive hover:text-destructive"
+                size="sm"
               />
             </div>
           </aside>

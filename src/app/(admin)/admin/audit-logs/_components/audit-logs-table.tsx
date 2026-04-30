@@ -16,6 +16,7 @@ import {
   formatAuditTargetLabel,
   formatAuditTargetType,
 } from "@/lib/audit-display";
+import { LogDeleteButton } from "@/components/admin/log-delete-button";
 import { formatDate } from "@/lib/utils";
 
 export function AuditLogsTable({ logs }: { logs: AuditLog[] }) {
@@ -33,6 +34,7 @@ export function AuditLogsTable({ logs }: { logs: AuditLog[] }) {
             <DataTableHeadCell>动作</DataTableHeadCell>
             <DataTableHeadCell>目标</DataTableHeadCell>
             <DataTableHeadCell>说明</DataTableHeadCell>
+            <DataTableHeadCell className="text-right">操作</DataTableHeadCell>
           </DataTableHeaderRow>
         </DataTableHead>
         <DataTableBody>
@@ -60,6 +62,17 @@ export function AuditLogsTable({ logs }: { logs: AuditLog[] }) {
               </DataTableCell>
               <DataTableCell className="max-w-xl whitespace-pre-wrap break-words text-muted-foreground">
                 {formatAuditMessage(log.message)}
+              </DataTableCell>
+              <DataTableCell>
+                <div className="flex justify-end">
+                  <LogDeleteButton
+                    id={log.id}
+                    target="AUDIT_LOGS"
+                    title="删除这条审计日志？"
+                    description="删除后无法恢复。系统会记录一条新的删除审计，用于保留后台操作痕迹。"
+                    successMessage="审计日志已删除"
+                  />
+                </div>
               </DataTableCell>
             </DataTableRow>
           ))}

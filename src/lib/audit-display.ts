@@ -32,6 +32,7 @@ export const auditActionFilterOptions = [
   { label: "满减规则", value: "promotion." },
   { label: "备份恢复", value: "backup." },
   { label: "流量同步", value: "traffic." },
+  { label: "日志清理", value: "logs." },
   { label: "流媒体槽位", value: "streaming-slot." },
 ];
 
@@ -46,6 +47,8 @@ const auditActionLabels: Record<string, string> = {
   "coupon.toggle": "切换优惠券状态",
   "inbound.delete": "删除线路入口",
   "inbound.display_name.update": "更新线路名称",
+  "logs.cleanup": "清理过期日志",
+  "logs.delete": "删除日志记录",
   "node.create": "创建节点",
   "node.update": "更新节点",
   "node.delete": "删除节点",
@@ -111,6 +114,8 @@ const auditTargetTypeLabels: Record<string, string> = {
   AppConfig: "系统设置",
   Coupon: "优惠券",
   Database: "数据库",
+  LogCleanup: "日志清理",
+  LogEntry: "日志记录",
   NodeInbound: "线路入口",
   NodeServer: "节点",
   Order: "订单",
