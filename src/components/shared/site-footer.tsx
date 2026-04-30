@@ -1,7 +1,7 @@
 import { GitFork } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
-import { PRODUCT_EDITION, PRODUCT_NAME, PRODUCT_REPOSITORY_URL, PRODUCT_VERSION } from "@/lib/product";
+import { PRODUCT_BASE_NAME, PRODUCT_EDITION, PRODUCT_REPOSITORY_URL, PRODUCT_VERSION } from "@/lib/product";
 
 export function SiteFooter({ className }: { className?: string }) {
   return (
@@ -12,8 +12,7 @@ export function SiteFooter({ className }: { className?: string }) {
       )}
     >
       <div className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-2.5 py-1 text-foreground shadow-sm">
-        <span className="text-muted-foreground">当前版本</span>
-        <span className="font-semibold">{PRODUCT_NAME}</span>
+        <span className="font-semibold">{PRODUCT_BASE_NAME}</span>
         <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase text-primary">
           {PRODUCT_EDITION}
         </span>
