@@ -2,9 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { normalizeTraceText } from "@/lib/trace-normalize";
 import { getPlanAvailability, type PlanAvailability } from "@/services/plan-availability";
 import { getLatencyRecommendations } from "@/services/latency-recommendations";
+import { getAppConfig } from "@/services/app-config";
 
 export async function getStorePageData(userId?: string) {
-  const [plans, pendingOrder, latencyRecommendations] = await Promise.all([
+  const [config, plans, pendingOrder] = await Promise.all([
+    getAppConfig(),
     prisma.subscriptionPlan.findMany({
       where: { isActive: true },
       include: {
@@ -25,8 +27,10 @@ export async function getStorePageData(userId?: string) {
           orderBy: { createdAt: "desc" },
         })
       : null,
-    getLatencyRecommendations(),
   ]);
+  const latencyRecommendations = config.networkInsightsEnabled
+    ? await getLatencyRecommendations()
+    : [];
 
   const availabilityMap = new Map<string, PlanAvailability>();
   await Promise.all(
@@ -39,6 +43,7 @@ export async function getStorePageData(userId?: string) {
   return {
     plans,
     availabilityMap,
+    networkInsightsEnabled: config.networkInsightsEnabled,
     latencyRecommendations,
     pendingOrder: pendingOrder
       ? {

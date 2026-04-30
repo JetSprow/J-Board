@@ -3,11 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { authenticateAgent, isAuthError } from "@/lib/agent-auth";
 import { normalizeTraceHops, normalizeTraceText } from "@/lib/trace-normalize";
 import { classifyTraceRoute } from "@/lib/route-classify";
+import { getAppConfig } from "@/services/app-config";
 
 export async function POST(req: Request) {
   const auth = await authenticateAgent(req);
   if (isAuthError(auth)) return auth;
   const { nodeId } = auth;
+  const config = await getAppConfig();
+
+  if (!config.networkInsightsEnabled) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
   let body: {
     traces: Array<{

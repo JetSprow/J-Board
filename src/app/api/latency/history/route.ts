@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAppConfig } from "@/services/app-config";
 
 const RANGES: Record<string, { ms: number; bucketMs: number }> = {
   "1d": { ms: 24 * 60 * 60 * 1000, bucketMs: 5 * 60 * 1000 },
@@ -8,6 +9,14 @@ const RANGES: Record<string, { ms: number; bucketMs: number }> = {
 };
 
 export async function GET(req: Request) {
+  const config = await getAppConfig();
+  if (!config.networkInsightsEnabled) {
+    return NextResponse.json(
+      { carriers: [], points: [], sufficient: false },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const nodeId = searchParams.get("nodeId");
   const range = searchParams.get("range") ?? "1d";

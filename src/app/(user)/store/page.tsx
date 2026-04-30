@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 export default async function StorePage() {
   const session = await getActiveSession();
-  const { plans, availabilityMap, pendingOrder, latencyRecommendations } = await getStorePageData(session?.user.id);
+  const { plans, availabilityMap, pendingOrder, networkInsightsEnabled, latencyRecommendations } = await getStorePageData(session?.user.id);
   const proxyPlans = getProxyPlans(plans);
   const streamingPlans = getStreamingPlans(plans);
   const proxyCards = sortPlansForDisplay(proxyPlans.map((plan) => toProxyPlanCard(plan, availabilityMap.get(plan.id))));
@@ -77,7 +77,7 @@ export default async function StorePage() {
 
       <PendingOrderBanner order={pendingOrder} />
 
-      {proxyCards.length > 0 && (
+      {networkInsightsEnabled && proxyCards.length > 0 && (
         <StoreLatencyRecommendations initialItems={latencyRecommendations} />
       )}
 
@@ -89,7 +89,7 @@ export default async function StorePage() {
           gridClassName="lg:grid-cols-2 xl:grid-cols-3"
           after={(
             <>
-              {proxyNodeIds.length > 0 && (
+              {networkInsightsEnabled && proxyNodeIds.length > 0 && (
                 <>
                   <LatencyLoader nodeIds={proxyNodeIds} />
                   <TraceLoader nodeIds={proxyNodeIds} />
@@ -99,7 +99,11 @@ export default async function StorePage() {
           )}
         >
           {proxyCards.map((plan) => (
-            <ProxyPlanCard key={plan.id} plan={plan} />
+            <ProxyPlanCard
+              key={plan.id}
+              plan={plan}
+              networkInsightsEnabled={networkInsightsEnabled}
+            />
           ))}
         </StorePlanSection>
       )}

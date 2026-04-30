@@ -34,9 +34,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   plan: ProxyPlan;
+  networkInsightsEnabled: boolean;
 }
 
-export function ProxyDetailDialog({ open, onOpenChange, plan }: Props) {
+export function ProxyDetailDialog({ open, onOpenChange, plan, networkInsightsEnabled }: Props) {
   const fixedTrafficGb = plan.fixedTrafficGb ?? plan.minTrafficGb;
   const [trafficGb, setTrafficGb] = useState(
     plan.pricingMode === "FIXED_PACKAGE" ? fixedTrafficGb : plan.minTrafficGb,
@@ -121,7 +122,7 @@ export function ProxyDetailDialog({ open, onOpenChange, plan }: Props) {
               </span>
             </div>
 
-            <div className="grid items-start gap-6 lg:grid-cols-[1fr_20rem]">
+            <div className={`grid items-start gap-6 ${networkInsightsEnabled ? "lg:grid-cols-[1fr_20rem]" : ""}`}>
               {/* Left: purchase config — always visible without scrolling */}
               <div className="space-y-3">
                 <ProxyInboundSelect
@@ -188,32 +189,37 @@ export function ProxyDetailDialog({ open, onOpenChange, plan }: Props) {
                 )}
               </div>
 
-              {/* Right: signal data — supplementary, scrolls independently on desktop */}
-              <div className="min-w-0 lg:max-h-[60vh] lg:overflow-y-auto lg:-mr-3 lg:pr-3">
-                <ProxySignalPanel
-                  latencyItems={latencyItems}
-                  traceItems={traceItems}
-                  onTraceSelect={setSelectedTrace}
-                  onLatencyClick={() => setLatencyDialogOpen(true)}
-                />
-              </div>
+              {networkInsightsEnabled && (
+                <div className="min-w-0 lg:max-h-[60vh] lg:overflow-y-auto lg:-mr-3 lg:pr-3">
+                  <ProxySignalPanel
+                    latencyItems={latencyItems}
+                    traceItems={traceItems}
+                    onTraceSelect={setSelectedTrace}
+                    onLatencyClick={() => setLatencyDialogOpen(true)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <ProxyTraceDetailDialog
-        trace={selectedTrace}
-        onOpenChange={(open) => {
-          if (!open) setSelectedTrace(null);
-        }}
-      />
+      {networkInsightsEnabled && (
+        <ProxyTraceDetailDialog
+          trace={selectedTrace}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTrace(null);
+          }}
+        />
+      )}
 
-      <LatencyDetailDialog
-        nodeId={plan.nodeId}
-        open={latencyDialogOpen}
-        onOpenChange={setLatencyDialogOpen}
-      />
+      {networkInsightsEnabled && (
+        <LatencyDetailDialog
+          nodeId={plan.nodeId}
+          open={latencyDialogOpen}
+          onOpenChange={setLatencyDialogOpen}
+        />
+      )}
     </>
   );
 }

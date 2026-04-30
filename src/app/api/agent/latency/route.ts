@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateAgent, isAuthError } from "@/lib/agent-auth";
+import { getAppConfig } from "@/services/app-config";
 
 /**
  * POST /api/agent/latency
@@ -11,6 +12,11 @@ export async function POST(req: Request) {
   const auth = await authenticateAgent(req);
   if (isAuthError(auth)) return auth;
   const { nodeId } = auth;
+  const config = await getAppConfig();
+
+  if (!config.networkInsightsEnabled) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
   let body: {
     latencies: Array<{ carrier: string; latencyMs: number }>;

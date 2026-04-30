@@ -27,6 +27,7 @@ const settingsSchema = z.object({
   reminderDispatchIntervalMinutes: z.coerce.number().int().positive().optional(),
   trafficSyncEnabled: z.string().optional(),
   trafficSyncIntervalSeconds: z.coerce.number().int().min(10).optional(),
+  networkInsightsEnabled: z.string().optional(),
   subscriptionRiskEnabled: z.string().optional(),
   subscriptionRiskAutoSuspend: z.string().optional(),
   subscriptionRiskWindowHours: z.coerce.number().int().min(1).max(168).optional(),
@@ -137,6 +138,10 @@ function buildSettingsUpdate(parsed: z.infer<typeof settingsSchema>, current: Aw
     trafficSyncEnabled: optionalBoolean(parsed.trafficSyncEnabled, current.trafficSyncEnabled),
     trafficSyncIntervalSeconds:
       parsed.trafficSyncIntervalSeconds ?? current.trafficSyncIntervalSeconds,
+    networkInsightsEnabled: optionalBoolean(
+      parsed.networkInsightsEnabled,
+      current.networkInsightsEnabled,
+    ),
     subscriptionRiskEnabled: optionalBoolean(
       parsed.subscriptionRiskEnabled,
       current.subscriptionRiskEnabled,
@@ -223,6 +228,7 @@ function revalidateSettingsViews() {
   revalidatePath("/login");
   revalidatePath("/register");
   revalidatePath("/dashboard");
+  revalidatePath("/store");
   revalidatePath("/subscriptions");
   revalidatePath("/admin/nodes");
   revalidatePath("/account");

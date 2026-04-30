@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronDown, Clock3, Gift, LifeBuoy, Mail, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Bell, ChevronDown, Clock3, Gift, LifeBuoy, Mail, RadioTower, Send, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,7 @@ interface AppConfig {
   reminderDispatchIntervalMinutes: number;
   trafficSyncEnabled: boolean;
   trafficSyncIntervalSeconds: number;
+  networkInsightsEnabled: boolean;
   subscriptionRiskEnabled: boolean;
   subscriptionRiskAutoSuspend: boolean;
   subscriptionRiskWindowHours: number;
@@ -241,6 +242,29 @@ export function SettingsForm({ config, coupons }: { config: AppConfig; coupons: 
               placeholder="60"
             />
             <p className="text-xs leading-5 text-muted-foreground">进程级后台定时任务，默认 60 秒；建议不要低于 10 秒。</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-lg border border-border bg-muted/25 p-3">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <RadioTower className="size-4 text-primary" /> 商城线路展示
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="networkInsightsEnabled">三网推荐与线路体验</Label>
+            <select
+              id="networkInsightsEnabled"
+              name="networkInsightsEnabled"
+              defaultValue={String(config.networkInsightsEnabled)}
+              className={selectClassName}
+            >
+              <option value="false">关闭</option>
+              <option value="true">开启</option>
+            </select>
+            <p className="text-xs leading-5 text-muted-foreground">
+              开启后，用户侧商城展示三网推荐、节点延迟、趋势和访问路径；关闭后只保留购买所需的线路入口选择。
+            </p>
           </div>
         </div>
       </section>

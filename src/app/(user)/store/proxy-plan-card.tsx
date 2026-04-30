@@ -10,9 +10,10 @@ import type { ProxyPlan } from "./proxy-plan-types";
 
 interface Props {
   plan: ProxyPlan;
+  networkInsightsEnabled: boolean;
 }
 
-export function ProxyPlanCard({ plan }: Props) {
+export function ProxyPlanCard({ plan, networkInsightsEnabled }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const hasInboundOptions = plan.inboundOptions.length > 0;
   const isFixedPackage = plan.pricingMode === "FIXED_PACKAGE";
@@ -80,7 +81,12 @@ export function ProxyPlanCard({ plan }: Props) {
         </div>
       </article>
 
-      <ProxyDetailDialog open={dialogOpen} onOpenChange={setDialogOpen} plan={plan} />
+      <ProxyDetailDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        plan={plan}
+        networkInsightsEnabled={networkInsightsEnabled}
+      />
     </>
   );
 }
