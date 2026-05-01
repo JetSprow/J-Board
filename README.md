@@ -4,6 +4,17 @@ J-Board（也称 JB 面板）是一个面向代理订阅售卖与流媒体共享
 
 J-Board 的定位很明确：它不是新的节点控制面，也不替代 3x-ui。它把售卖、开通、订阅交付、售后和风险审查做成一个完整面板，并通过只读 Agent 从节点侧采集延迟、路由和 Xray access log 证据。
 
+Demo：https://demo.o9o.nl/
+
+demo 用户：demo-user@jboard.local 
+密码：Demo-76ac3f19
+
+demo 管理员： demo-admin@jboard.local
+密码：Demo-1cb3572f
+
+有问题 有想法请指教 
+该版本将在测试后发布
+
 开发进度频道：[@JBoardAnno](https://t.me/JBoardAnno)
 
 ## 快速认识
